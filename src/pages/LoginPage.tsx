@@ -5,7 +5,7 @@ import {useMutation} from "@tanstack/react-query";
 import {useEffect, useState} from "react";
 import {useAuth} from "@/contexts/AuthContext.tsx";
 import {useNavigate} from "react-router-dom";
-import {login} from "@/service/fnbApi.ts";
+import {login} from "@/service/fnb-api.ts";
 
 export default function LoginPage() {
   const auth = useAuth();

@@ -78,7 +78,7 @@ export default function MenuSidebar() {
             onClick={() => {
               auth.clearTokenAndMyInfo()
             }}>
-            <LogOut/>
+            <LogOut size={18}/>
             <span>Log out</span>
           </button>
         </SidebarMenu>

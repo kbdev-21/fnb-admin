@@ -3,7 +3,8 @@ import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/c
 import {formatVnd} from "@/utils/string-utils.ts";
 import {Button} from "@/components/ui/button.tsx";
 import {Link} from "react-router-dom";
-import {fetchProducts} from "@/service/fnbApi.ts";
+import {fetchProducts} from "@/service/fnb-api.ts";
+import {Plus} from "lucide-react";
 
 export default function MenuPage() {
   const productsQuery = useQuery({
@@ -17,7 +18,12 @@ export default function MenuPage() {
     <div className={"flex flex-col gap-4"}>
       <div className={"flex justify-between items-center"}>
         <div className={"text-xl font-[600]"}>Menu</div>
-        <Button>New product</Button>
+        <Link to={"/menu/new-product"}>
+          <Button className={"cursor-pointer"}>
+            <Plus/>
+            New product
+          </Button>
+        </Link>
       </div>
       <div className="rounded-lg border border-border overflow-hidden bg-card">
         <Table>

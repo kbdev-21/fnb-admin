@@ -11,6 +11,7 @@ import StaffPage from "@/pages/StaffPage.tsx";
 import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
 import {AuthProvider} from "@/contexts/AuthContext.tsx";
 import ProductDetailPage from "@/pages/ProductDetailPage.tsx";
+import ProductCreatePage from "@/pages/ProductCreatePage.tsx";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +24,7 @@ function App() {
             <Route element={<MainLayout/>}>
               <Route path="/" element={<Navigate to="/dashboard" replace/>}/>
               <Route path="/menu" element={<MenuPage/>}/>
+              <Route path="/menu/new-product" element={<ProductCreatePage/>}/>
               <Route path="/menu/:productSlug" element={<ProductDetailPage/>}/>
               <Route path="/orders" element={<OrdersPage/>}/>
               <Route path="/customers" element={<CustomersPage/>}/>

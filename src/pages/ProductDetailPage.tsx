@@ -1,6 +1,6 @@
 import {Button} from "@/components/ui/button.tsx";
 import {useQuery} from "@tanstack/react-query";
-import {fetchProductBySlug} from "@/service/fnbApi.ts";
+import {fetchProductBySlug} from "@/service/fnb-api.ts";
 import {useParams} from "react-router-dom";
 import {ChevronDown, ChevronRight, Plus, Trash, Utensils} from "lucide-react";
 import {Card} from "@/components/ui/card.tsx";
