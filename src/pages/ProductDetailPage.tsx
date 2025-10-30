@@ -80,7 +80,7 @@ export default function ProductDetailPage() {
                       {option.selections.map((selection) => (
                         <div className={"flex gap-4"}>
                           <div className={"w-full"}>
-                            <Input value={selection.value}/>
+                            <Input value={selection.name}/>
                           </div>
                           <div className={"w-[300px]"}>
                             <Input value={selection.priceChange}/>

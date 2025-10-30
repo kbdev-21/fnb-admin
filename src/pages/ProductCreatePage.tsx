@@ -3,8 +3,8 @@ import {Button} from "@/components/ui/button.tsx";
 import {Card} from "@/components/ui/card.tsx";
 import {Input} from "@/components/ui/input.tsx";
 import {useState} from "react";
-import {useQuery} from "@tanstack/react-query";
-import {fetchCategories} from "@/service/fnb-api.ts";
+import {useMutation, useQuery} from "@tanstack/react-query";
+import {createProduct, fetchCategories} from "@/service/fnb-api.ts";
 import {
   Select,
   SelectContent,
@@ -15,37 +15,45 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import {OpenAddImageDialogButton} from "@/components/app/OpenAddImageDialogButton.tsx";
-
-type ToppingCreate = {
-  name: string;
-  priceChange: string;
-}
-
-type OptionCreate = {
-  name: string;
-  values: OptionCreateValue[];
-}
-
-type OptionCreateValue = {
-  name: string;
-  priceChange: string;
-}
+import type {OptionCreate, ToppingCreate} from "@/service/types.ts";
+import {useAuth} from "@/contexts/AuthContext.tsx";
+import {Link, useNavigate} from "react-router-dom";
 
 export default function ProductCreatePage() {
+  const auth = useAuth();
+  const navigate = useNavigate();
+
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [imgUrls, setImgUrls] = useState<string[]>([]);
   const [basePrice, setBasePrice] = useState("");
   const [comparePrice, setComparePrice] = useState("");
-  const [category, setCategory] = useState("");
   const [categoryId, setCategoryId] = useState("");
-  const [options, setOptions] = useState<OptionCreate[]>([{
-    name: "",
-    values: [
-      {name: "", priceChange: ""}
-    ]
-  }]);
-  const [toppings, setToppings] = useState<ToppingCreate[]>([{name: "", priceChange: ""}]);
+  const [options, setOptions] = useState<OptionCreate[]>([]);
+  const [toppings, setToppings] = useState<ToppingCreate[]>([]);
+
+  const createProductMutation = useMutation({
+    mutationFn: () => createProduct(
+      auth.token ?? "",
+      {
+        name: name,
+        description: description,
+        imgUrls: imgUrls,
+        basePrice: Number(basePrice),
+        comparePrice: Number(comparePrice),
+        categoryId: categoryId,
+        options: options,
+        toppings: toppings,
+      }
+    ),
+    onSuccess: (res) => {
+      alert("Create product successfully!");
+      navigate("/menu");
+    },
+    onError: (err) => {
+      alert(err instanceof Error ? err.message : "Upload failed")
+    },
+  });
 
   const categoriesQuery = useQuery({
     queryKey: ["categories"],
@@ -60,12 +68,14 @@ export default function ProductCreatePage() {
       {/* Header */}
       <div className={"flex justify-between items-center"}>
         <div className={"text-xl font-[600] flex justify-between items-center gap-2"}>
-          <Utensils size={16}/>
+          <Link to={"/menu"}>
+            <Utensils size={16}/>
+          </Link>
           <ChevronRight size={14}/>
           <div>New Product</div>
         </div>
-        <Button variant={"default"}>
-          <div>Save product</div>
+        <Button variant={"default"} className={"cursor-pointer"} onClick={() => createProductMutation.mutate()}>
+          Save product
         </Button>
       </div>
 
@@ -129,13 +139,109 @@ export default function ProductCreatePage() {
           </Card>
 
           {/* Options card */}
-          <Card className={"p-4 gap-4"}>
-            <div className={"flex justify-between items-center"}>
-              <div className={"text-sm font-[600]"}>Options</div>
-              <Button variant={"outline"} className={"cursor-pointer"}>
-                <Plus/>
-                Add option
+          <Card className="p-4 gap-4">
+            <div className="flex justify-between items-center">
+              <div className="text-sm font-[600]">Options</div>
+              <Button
+                onClick={() => {
+                  setOptions(prev => [
+                    ...prev,
+                    { name: "", selections: [{ name: "", priceChange: "" }] }
+                  ]);
+                }}
+                variant="outline"
+                className="cursor-pointer"
+              >
+                <Plus /> Add option
               </Button>
+            </div>
+
+            <div className="flex flex-col gap-4">
+              {options.map((option, optionIndex) => (
+                <Card key={optionIndex} className="p-4">
+                  {/* Option Header */}
+                  <div className="flex gap-4 items-end mb-2">
+                    <div className="w-full flex flex-col gap-2">
+                      <div className="text-sm">Option Name</div>
+                      <Input
+                        value={option.name}
+                        onChange={e => {
+                          const newOptions = [...options];
+                          newOptions[optionIndex].name = e.target.value;
+                          setOptions(newOptions);
+                        }}
+                        className={"border-muted-foreground"}
+                      />
+                    </div>
+                    <Button
+                      onClick={() => {
+                        const newOptions = [...options];
+                        newOptions[optionIndex].selections.push({ name: "", priceChange: "" });
+                        setOptions(newOptions);
+                      }}
+                      variant="outline"
+                      className="cursor-pointer"
+                    >
+                      <Plus /> Add selection
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setOptions(prev => prev.filter((_, i) => i !== optionIndex));
+                      }}
+                      variant="destructive"
+                      className="cursor-pointer"
+                    >
+                      Delete
+                    </Button>
+                  </div>
+
+                  {/* Selections */}
+                  <div className="flex flex-col gap-2">
+                    <div className={"text-sm"}>Selections and Price changes (đ)</div>
+                    {option.selections.map((selection, selIndex) => (
+                      <div className="flex gap-4 items-center" key={selIndex}>
+                        <div className="w-full">
+                          <Input
+                            value={selection.name}
+                            onChange={e => {
+                              const newOptions = [...options];
+                              newOptions[optionIndex].selections[selIndex].name = e.target.value;
+                              setOptions(newOptions);
+                            }}
+                            className={"border-muted-foreground"}
+                          />
+                        </div>
+                        <div className="w-[300px]">
+                          <Input
+                            type="number"
+                            value={selection.priceChange}
+                            onChange={e => {
+                              const newOptions = [...options];
+                              newOptions[optionIndex].selections[selIndex].priceChange = e.target.value;
+                              setOptions(newOptions);
+                            }}
+                            className={"border-muted-foreground"}
+                          />
+                        </div>
+                        <div className="w-[80px] flex justify-center">
+                          <Button
+                            onClick={() => {
+                              const newOptions = [...options];
+                              newOptions[optionIndex].selections.splice(selIndex, 1);
+                              setOptions(newOptions);
+                            }}
+                            variant="destructive"
+                            size="icon-sm"
+                            className={"bg-destructive/20 hover:bg-destructive/20 cursor-pointer"}
+                          >
+                            <Trash className={"text-destructive"}/>
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              ))}
             </div>
           </Card>
 
@@ -206,12 +312,7 @@ export default function ProductCreatePage() {
           </Card>
         </div>
 
-        {/* Right part */}
-        <div className={"w-full max-w-[360px]"}>
-          <Card className={"p-4 h-full"}>
-            <div className={"font-[600] text-sm"}>Some shit</div>
-          </Card>
-        </div>
+
       </div>
     </div>
   );

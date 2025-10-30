@@ -44,7 +44,7 @@ export default function MenuPage() {
                 <TableRow key={product.id} className={"h-12"}>
                   <TableCell className={"text-center"}>{index + 1}</TableCell>
                   <TableCell className={"flex justify-center items-center"}>
-                    <img src={product.imgUrl[0]} alt={"product-img"} sizes={"40px"} className={"w-10 h-10"}/>
+                    <img src={product.imgUrls[0]} alt={"product-img"} sizes={"40px"} className={"w-10 h-10"}/>
                   </TableCell>
                   <TableCell className={"font-[600]"}>
                     <Link to={`/menu/${product.slug}`} className={"hover:underline"}>

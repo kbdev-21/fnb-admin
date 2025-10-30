@@ -16,3 +16,18 @@ export type Address = {
   city: string;
   detail: string;
 };
+
+export type ToppingCreate = {
+  name: string;
+  priceChange: string;
+}
+
+export type OptionCreate = {
+  name: string;
+  selections: OptionCreateSelection[];
+}
+
+export type OptionCreateSelection = {
+  name: string;
+  priceChange: string;
+}
