@@ -2,22 +2,10 @@ import {Input} from "@/components/ui/input.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import {Card} from "@/components/ui/card.tsx";
 import {useMutation} from "@tanstack/react-query";
-import axios from "axios";
-import type {User} from "@/types/auth.ts";
 import {useEffect, useState} from "react";
 import {useAuth} from "@/contexts/AuthContext.tsx";
 import {useNavigate} from "react-router-dom";
-
-async function login(phoneNumOrEmail: string, password: string): Promise<{
-  user: User,
-  token: string,
-}> {
-  const res = await axios.post("http://localhost:8080/api/auth/login", {
-    phoneNumOrEmail: phoneNumOrEmail,
-    password: password
-  });
-  return res.data;
-}
+import {login} from "@/service/fnbApi.ts";
 
 export default function LoginPage() {
   const auth = useAuth();

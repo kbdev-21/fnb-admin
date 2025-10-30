@@ -18,7 +18,7 @@ export default function MainLayout() {
     <div>
       <SidebarProvider>
         <MenuSidebar/>
-        <main className={"p-8 bg-border w-full flex flex-col"}>
+        <main className={"p-8 bg-background w-full flex flex-col"}>
           <Outlet />
         </main>
       </SidebarProvider>

@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/sidebar.tsx";
 import {
   CirclePercent,
-  Gauge, Handshake, LaptopMinimal, LogOut,
+  Gauge, LaptopMinimal, LogOut,
   ShoppingCart,
   Users,
   Utensils
@@ -59,10 +59,10 @@ export default function MenuSidebar() {
               {items.map((item) => {
                 const isActive = location.pathname.startsWith(item.url);
                 return (
-                  <Link to={item.url} className={`flex rounded-lg gap-2 items-center py-2 px-3 transition-all
+                  <Link to={item.url} className={`flex rounded-lg gap-2.5 items-center py-2 px-3 transition-all
                       ${isActive ? "bg-primary text-primary-foreground hover:bg-primary" : "hover:bg-primary/10"}`}
                   >
-                    <item.icon/>
+                    <item.icon size={18}/>
                     <span>{item.title}</span>
                   </Link>
                 )
