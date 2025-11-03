@@ -67,7 +67,7 @@ export default function ProductCreatePage() {
   return (
     <div className={"flex flex-col gap-4"}>
       {/* Header */}
-      <div className={"flex justify-between items-center"}>
+      <div className={"flex justify-between items-start"}>
         <div className={"text-xl font-[600] flex justify-between items-center gap-2"}>
           <Link to={"/menu"}>
             <Utensils size={16}/>

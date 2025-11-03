@@ -1,3 +1,7 @@
+export function uppercaseFirstLetter(role: string): string {
+  return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
+}
+
 export function formatVnd(value: number): string {
   return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
