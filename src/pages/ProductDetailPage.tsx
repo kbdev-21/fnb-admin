@@ -1,36 +1,157 @@
 import {Button} from "@/components/ui/button.tsx";
-import {useQuery} from "@tanstack/react-query";
-import {fetchProductBySlug} from "@/service/fnb-api.ts";
-import {useParams} from "react-router-dom";
+import {useMutation, useQuery} from "@tanstack/react-query";
+import {fetchCategories, fetchProductBySlug, updateProduct} from "@/service/fnb-api.ts";
+import {useNavigate, useParams} from "react-router-dom";
 import {ChevronDown, ChevronRight, Plus, Trash, Utensils} from "lucide-react";
 import {Card} from "@/components/ui/card.tsx";
 import {Input} from "@/components/ui/input.tsx";
+import {Spinner} from "@/components/ui/spinner.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select.tsx";
+import {OpenAddImageDialogButton} from "@/components/app/OpenAddImageDialogButton.tsx";
+import {useEffect, useState} from "react";
+import type {OptionDto, ToppingDto} from "@/service/types.ts";
+import {useAuth} from "@/contexts/AuthContext.tsx";
 
 export default function ProductDetailPage() {
+  const auth = useAuth();
+  const navigate = useNavigate();
   const { productSlug } = useParams();
+
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [imgUrls, setImgUrls] = useState<string[]>([]);
+  const [basePrice, setBasePrice] = useState("");
+  const [comparePrice, setComparePrice] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+  const [options, setOptions] = useState<OptionDto[]>([]);
+  const [toppings, setToppings] = useState<ToppingDto[]>([]);
+  const [savable, setSavable] = useState(false);
 
   const productQuery = useQuery({
     queryKey: ["product", productSlug],
     queryFn: () => fetchProductBySlug(productSlug!),
   });
 
-  if(productQuery.isLoading || productQuery.error) {return <div>Loading...</div>}
+  const categoriesQuery = useQuery({
+    queryKey: ["categories"],
+    queryFn: () => fetchCategories()
+  });
+
+  const updateProductMutation = useMutation({
+    mutationFn: () =>
+      updateProduct(
+        auth.token ?? "",
+        productQuery.data.id,
+        {
+          name: name !== productQuery.data.name ? name : undefined,
+          description: description !== productQuery.data.description ? description : undefined,
+          imgUrls: JSON.stringify(imgUrls) !== JSON.stringify(productQuery.data.imgUrls) ? imgUrls : undefined,
+          basePrice: basePrice !== String(productQuery.data.basePrice) ? Number(basePrice) : undefined,
+          comparePrice: comparePrice !== String(productQuery.data.comparePrice ?? "")
+            ? (comparePrice === "" ? null : Number(comparePrice))
+            : undefined,
+          categoryId: categoryId !== productQuery.data.categoryId ? categoryId : undefined,
+          options: JSON.stringify(options) !== JSON.stringify(productQuery.data.options) ? options : undefined,
+          toppings: JSON.stringify(toppings) !== JSON.stringify(productQuery.data.toppings) ? toppings : undefined,
+        }
+      ),
+    onSuccess: (data) => {
+      alert("Update success");
+      productQuery.refetch();
+      navigate(`/menu/${data.slug}`);
+    },
+    onError: (e) => {
+      alert(`Update failed: ${e.message}`);
+    }
+  });
+
+  useEffect(() => {
+    const product = productQuery.data;
+    if (!product) return;
+
+    setName(product.name);
+    setDescription(product.description ?? "");
+    setImgUrls(product.imgUrls ?? []);
+    setBasePrice(String(product.basePrice ?? ""));
+    setComparePrice(String(product.comparePrice ?? ""));
+    setCategoryId(product.categoryId ?? "");
+    setOptions(product.options ?? []);
+    setToppings(product.toppings ?? []);
+
+  }, [productQuery.data]);
+
+  useEffect(() => {
+    if (!productQuery.data) return;
+
+    const original = productQuery.data;
+
+    const isNameChanged = name !== original.name;
+    const isDescriptionChanged = description !== original.description;
+    const isImgUrlsChanged = JSON.stringify(imgUrls) !== JSON.stringify(original.imgUrls);
+    const isBasePriceChanged = basePrice !== String(original.basePrice);
+    const isComparePriceChanged = comparePrice !== String(original.comparePrice ?? "");
+    const isCategoryChanged = categoryId !== original.categoryId;
+    const isOptionsChanged = JSON.stringify(options) !== JSON.stringify(original.options);
+    const isToppingsChanged = JSON.stringify(toppings) !== JSON.stringify(original.toppings);
+
+    const hasChanged =
+      isNameChanged ||
+      isDescriptionChanged ||
+      isImgUrlsChanged ||
+      isBasePriceChanged ||
+      isComparePriceChanged ||
+      isCategoryChanged ||
+      isOptionsChanged ||
+      isToppingsChanged;
+
+    setSavable(hasChanged);
+  }, [
+    productQuery.data,
+    name,
+    description,
+    imgUrls,
+    basePrice,
+    comparePrice,
+    categoryId,
+    options,
+    toppings
+  ]);
+
+  if(productQuery.isLoading || productQuery.error || categoriesQuery.isLoading || categoriesQuery.error) {
+    return <Spinner className={"text-primary size-8"}/>;
+  }
   const product = productQuery.data;
+  const categories = categoriesQuery.data;
 
   return (
     <div className={"flex flex-col gap-4"}>
+      {/* Header */}
       <div className={"flex justify-between items-center"}>
         <div className={"text-xl font-[600] flex justify-between items-center gap-2"}>
           <Utensils size={16}/>
           <ChevronRight size={14}/>
           <div>{product.name}</div>
         </div>
-        <Button variant={"ghost"} className={"bg-muted cursor-pointer"}>
-          <div>Actions</div>
-          <ChevronDown/>
-        </Button>
+        <div className={"flex gap-2"}>
+          <Button variant={"ghost"} className={"bg-muted cursor-pointer"}>
+            <div>Actions</div>
+            <ChevronDown/>
+          </Button>
+          <Button onClick={() => updateProductMutation.mutate()} variant={"default"} disabled={!savable} className={"cursor-pointer"}>
+            Save changes
+          </Button>
+        </div>
       </div>
 
+      {/* Body */}
       <div className={"flex gap-4"}>
         {/* Left part */}
         <div className={"w-full flex flex-col gap-4"}>
@@ -38,91 +159,214 @@ export default function ProductDetailPage() {
           <Card className={"p-4"}>
             <div className={"flex flex-col gap-2"}>
               <div className={"text-sm"}>Name</div>
-              <Input value={product.name}/>
+              <Input value={name} onChange={(e) => setName(e.target.value)}/>
             </div>
             <div className={"flex flex-col gap-2"}>
               <div className={"text-sm"}>Description</div>
-              <Input value={product.description}/>
+              <Input value={description} onChange={(e) => setDescription(e.target.value)}/>
+            </div>
+            <div className={"flex flex-col gap-2"}>
+              <div className={"text-sm"}>Images</div>
+              <div className={"flex gap-4"}>
+                {imgUrls.map(imgUrl => (
+                  <img
+                    key={imgUrl}
+                    src={imgUrl}
+                    alt={imgUrl}
+                    className={"h-20 w-20 rounded-md border border-muted-foreground"}
+                  />
+                ))}
+                <OpenAddImageDialogButton
+                  onUploaded={(url) => {
+                    setImgUrls(prev => [...prev, url]);
+                  }}
+                />
+              </div>
+            </div>
+            <div className={"grid grid-cols-2 w-full gap-4"}>
+              <div className={"flex flex-col gap-2"}>
+                <div className={"text-sm"}>Base Price (VND)</div>
+                <Input
+                  value={basePrice}
+                  onChange={(e) => setBasePrice(e.target.value)}
+                  type={"number"}
+                />
+              </div>
+              <div className={"flex flex-col gap-2"}>
+                <div className={"text-sm"}>Compare Price (VND) (optional)</div>
+                <Input
+                  value={comparePrice}
+                  onChange={(e) => setComparePrice(e.target.value)}
+                  type={"number"}
+                />
+              </div>
             </div>
             <div className={"flex flex-col gap-2"}>
               <div className={"text-sm"}>Category</div>
-              <Input value={product.category.name}/>
+              <div className={"w-full "}>
+                <CategorySelector/>
+              </div>
             </div>
           </Card>
 
-          {/* Options card */}
-          <Card className={"p-4 gap-4"}>
-            <div className={"flex justify-between items-center"}>
-              <div className={"text-sm font-[600]"}>Options</div>
-              <Button variant={"outline"} className={"cursor-pointer"}>
-                <Plus/>
-                Add option
+          {/* Options list card */}
+          <Card className="p-4 gap-4">
+            <div className="flex justify-between items-center">
+              <div className="text-sm font-[600]">Options</div>
+              <Button
+                onClick={() => {
+                  setOptions(prev => [
+                    ...prev,
+                    { name: "", selections: [{ name: "", priceChange: "" }] }
+                  ]);
+                }}
+                variant="outline"
+                className="cursor-pointer"
+              >
+                <Plus /> Add option
               </Button>
             </div>
 
-            <div className={"flex flex-col gap-4"}>
-              {product.options.map((option) => (
-                <Card className={"p-4"} key={option.id}>
-                  <div className={"flex flex-col gap-4"}>
-                    <div className={"flex gap-4 items-end"}>
-                      <div className={"w-full flex flex-col gap-2"}>
-                        <div className={"text-sm"}>Name</div>
-                        <Input value={option.name}/>
-                      </div>
-                      <Button variant={"outline"} className={"cursor-pointer"}>
-                        <Plus/>
-                        Add selection
-                      </Button>
-                      <Button variant={"destructive"} className={"cursor-pointer bg-destructive"}>Delete</Button>
+            <div className="flex flex-col gap-4">
+              {options.map((option, index) => (
+                <Card key={index} className="p-4">
+                  {/* Option Header */}
+                  <div className="flex gap-4 items-end mb-2">
+                    <div className="w-full flex flex-col gap-2">
+                      <div className="text-sm">Option Name</div>
+                      <Input
+                        value={option.name}
+                        onChange={e => {
+                          const newOptions = [...options];
+                          newOptions[index].name = e.target.value;
+                          setOptions(newOptions);
+                        }}
+                      />
                     </div>
-                    <div className={"w-full flex flex-col gap-2"}>
-                      <div className={"text-sm"}>Selections and Price changes (đ)</div>
-                      {option.selections.map((selection) => (
-                        <div className={"flex gap-4"}>
-                          <div className={"w-full"}>
-                            <Input value={selection.name}/>
-                          </div>
-                          <div className={"w-[300px]"}>
-                            <Input value={selection.priceChange}/>
-                          </div>
-                          <div className={"w-[60px] flex justify-center"}>
-                            <Button variant={"destructive"} size={"icon-sm"} className={"bg-destructive/20 hover:bg-destructive/20 cursor-pointer"}>
-                              <Trash className={"text-destructive"}/>
-                            </Button>
-                          </div>
+                    <Button
+                      onClick={() => {
+                        const newOptions = [...options];
+                        newOptions[index].selections.push({ name: "", priceChange: "" });
+                        setOptions(newOptions);
+                      }}
+                      variant="outline"
+                      className="cursor-pointer"
+                    >
+                      <Plus /> Add selection
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setOptions(prev => prev.filter((_, i) => i !== index));
+                      }}
+                      variant="destructive"
+                      className="cursor-pointer"
+                    >
+                      Delete
+                    </Button>
+                  </div>
 
+                  {/* Selections */}
+                  <div className="flex flex-col gap-2">
+                    <div className={"text-sm"}>Selections and Price changes (đ)</div>
+                    {option.selections.map((selection: any, selIndex: number) => (
+                      <div className="flex gap-4 items-center" key={selIndex}>
+                        <div className="w-full">
+                          <Input
+                            value={selection.name}
+                            onChange={e => {
+                              const newOptions = [...options];
+                              newOptions[index].selections[selIndex].name = e.target.value;
+                              setOptions(newOptions);
+                            }}
+                          />
                         </div>
-                      ))}
-                    </div>
+                        <div className="w-[300px]">
+                          <Input
+                            type="number"
+                            value={selection.priceChange}
+                            onChange={e => {
+                              const newOptions = [...options];
+                              newOptions[index].selections[selIndex].priceChange = e.target.value;
+                              setOptions(newOptions);
+                            }}
+                          />
+                        </div>
+                        <div className="w-[80px] flex justify-center">
+                          <Button
+                            onClick={() => {
+                              const newOptions = [...options];
+                              newOptions[index].selections.splice(selIndex, 1);
+                              setOptions(newOptions);
+                            }}
+                            variant="destructive"
+                            size="icon-sm"
+                            className={"bg-destructive/20 hover:bg-destructive/20 cursor-pointer"}
+                          >
+                            <Trash className={"text-destructive"}/>
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </Card>
               ))}
             </div>
           </Card>
 
-          {/* Toppings card */}
+          {/* Toppings list card */}
           <Card className={"p-4 gap-4"}>
             <div className={"flex justify-between items-center"}>
               <div className={"text-sm font-[600]"}>Toppings</div>
-              <Button variant={"outline"} className={"cursor-pointer"}>
+              <Button
+                onClick={() => {
+                  setToppings(prev => [...prev, {
+                    name: "",
+                    priceChange: "",
+                  }]);
+                }}
+                variant={"outline"}
+                className={"cursor-pointer"}
+              >
                 <Plus/>
                 Add topping
               </Button>
             </div>
             <div className={"flex flex-col gap-4"}>
-              {product.toppings.map((topping) => (
-                <Card className={"p-4"} key={topping.id}>
+              {toppings.map((topping, index) => (
+                <Card className={"p-4"}>
                   <div className={"flex gap-4 items-center"}>
                     <div className={"w-full flex flex-col gap-2"}>
                       <div className={"text-sm"}>Name</div>
-                      <Input value={topping.name}/>
+                      <Input
+                        value={topping.name}
+                        onChange={(e) => {
+                          const newToppings = [...toppings];
+                          newToppings[index].name = e.target.value;
+                          setToppings(newToppings);
+                        }}
+                      />
                     </div>
                     <div className={"w-[300px] flex flex-col gap-2"}>
                       <div className={"text-sm"}>Price change (đ)</div>
-                      <Input value={topping.priceChange} />
+                      <Input
+                        value={topping.priceChange}
+                        onChange={(e) => {
+                          const newToppings = [...toppings];
+                          newToppings[index].priceChange = e.target.value;
+                          setToppings(newToppings);
+                        }}
+                        type={"number"}
+                      />
                     </div>
                     <div className={"w-[80px] flex justify-center"}>
-                      <Button variant={"destructive"} size={"icon-sm"} className={"bg-destructive/20 hover:bg-destructive/20 cursor-pointer"}>
+                      <Button
+                        onClick={() => {
+                          setToppings(prev => prev.filter((_, i) => i !== index));
+                        }}
+                        variant={"destructive"}
+                        size={"icon-sm"}
+                        className={"bg-destructive/20 hover:bg-destructive/20 cursor-pointer"}
+                      >
                         <Trash className={"text-destructive"}/>
                       </Button>
                     </div>
@@ -132,16 +376,38 @@ export default function ProductDetailPage() {
             </div>
           </Card>
         </div>
-
-        {/* Right part */}
-        <div className={"w-full max-w-[360px]"}>
-          <Card className={"p-4 h-full"}>
-            <div className={"font-[600] text-sm"}>Some shit</div>
-          </Card>
-        </div>
       </div>
-
-
     </div>
   );
+
+  function CategorySelector() {
+    return (
+      <Select
+        value={categoryId}
+        onValueChange={(value) => {
+          const selected = categories.find((c: any) => c.id === value)
+          if (selected) {
+            setCategoryId(selected.id)
+          }
+        }}
+      >
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder="Choose a category"/>
+        </SelectTrigger>
+        <SelectContent>
+          <SelectGroup>
+            <SelectLabel>Categories</SelectLabel>
+            {categories.map((currentCategory: any) => (
+              <SelectItem
+                value={currentCategory.id}
+                key={currentCategory.id}
+              >
+                {currentCategory.name}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        </SelectContent>
+      </Select>
+    )
+  }
 }

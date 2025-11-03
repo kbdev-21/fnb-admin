@@ -43,7 +43,7 @@ export function OpenAddImageDialogButton(
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Image upload</DialogTitle>
-          <DialogDescription>Upload and set the image into the product</DialogDescription>
+          <DialogDescription>Upload and set the image</DialogDescription>
         </DialogHeader>
 
         <Input

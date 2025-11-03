@@ -1,4 +1,4 @@
-import type {OptionCreate, ToppingCreate, User} from "@/service/types.ts";
+import type {OptionDto, ToppingDto, User} from "@/service/types.ts";
 import axios from "axios";
 
 const baseUrl = "http://localhost:8080";
@@ -19,10 +19,10 @@ export async function createProduct(token: string, productCreateDto: {
   description: string;
   basePrice: number;
   imgUrls: string[];
-  comparePrice: number;
+  comparePrice: number | null;
   categoryId: string;
-  options: OptionCreate[];
-  toppings: ToppingCreate[];
+  options: OptionDto[];
+  toppings: ToppingDto[];
 }) {
   const res = await axios.post(`${baseUrl}/api/products`, {
     name: productCreateDto.name,
@@ -33,6 +33,33 @@ export async function createProduct(token: string, productCreateDto: {
     categoryId: productCreateDto.categoryId,
     options: productCreateDto.options,
     toppings: productCreateDto.toppings,
+  }, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+  return res.data;
+}
+
+export async function updateProduct(token: string, productId: string, productUpdateDto: {
+  name: string | undefined;
+  description: string | undefined;
+  basePrice: number | undefined;
+  imgUrls: string[] | undefined;
+  comparePrice: number | null | undefined;
+  categoryId: string | undefined;
+  options: OptionDto[] | undefined;
+  toppings: ToppingDto[] | undefined;
+}) {
+  const res = await axios.patch(`${baseUrl}/api/products/${productId}`, {
+    name: productUpdateDto.name,
+    description: productUpdateDto.description,
+    imgUrls: productUpdateDto.imgUrls,
+    basePrice: productUpdateDto.basePrice,
+    comparePrice: productUpdateDto.comparePrice,
+    categoryId: productUpdateDto.categoryId,
+    options: productUpdateDto.options,
+    toppings: productUpdateDto.toppings,
   }, {
     headers: {
       Authorization: `Bearer ${token}`

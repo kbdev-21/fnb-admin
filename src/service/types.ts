@@ -17,17 +17,17 @@ export type Address = {
   detail: string;
 };
 
-export type ToppingCreate = {
+export type ToppingDto = {
   name: string;
   priceChange: string;
 }
 
-export type OptionCreate = {
+export type OptionDto = {
   name: string;
-  selections: OptionCreateSelection[];
+  selections: OptionDtoSelection[];
 }
 
-export type OptionCreateSelection = {
+export type OptionDtoSelection = {
   name: string;
   priceChange: string;
 }

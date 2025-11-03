@@ -15,9 +15,10 @@ import {
   SelectValue,
 } from "@/components/ui/select.tsx";
 import {OpenAddImageDialogButton} from "@/components/app/OpenAddImageDialogButton.tsx";
-import type {OptionCreate, ToppingCreate} from "@/service/types.ts";
+import type {OptionDto, ToppingDto} from "@/service/types.ts";
 import {useAuth} from "@/contexts/AuthContext.tsx";
 import {Link, useNavigate} from "react-router-dom";
+import {Spinner} from "@/components/ui/spinner.tsx";
 
 export default function ProductCreatePage() {
   const auth = useAuth();
@@ -29,8 +30,8 @@ export default function ProductCreatePage() {
   const [basePrice, setBasePrice] = useState("");
   const [comparePrice, setComparePrice] = useState("");
   const [categoryId, setCategoryId] = useState("");
-  const [options, setOptions] = useState<OptionCreate[]>([]);
-  const [toppings, setToppings] = useState<ToppingCreate[]>([]);
+  const [options, setOptions] = useState<OptionDto[]>([]);
+  const [toppings, setToppings] = useState<ToppingDto[]>([]);
 
   const createProductMutation = useMutation({
     mutationFn: () => createProduct(
@@ -46,9 +47,9 @@ export default function ProductCreatePage() {
         toppings: toppings,
       }
     ),
-    onSuccess: (res) => {
+    onSuccess: (data) => {
       alert("Create product successfully!");
-      navigate("/menu");
+      navigate(`/menu/${data.slug}`);
     },
     onError: (err) => {
       alert(err instanceof Error ? err.message : "Upload failed")
@@ -60,7 +61,7 @@ export default function ProductCreatePage() {
     queryFn: () => fetchCategories()
   });
 
-  if (categoriesQuery.isLoading || categoriesQuery.isError) return <div>Loading...</div>
+  if (categoriesQuery.isLoading || categoriesQuery.isError) return <Spinner className={"text-primary size-8"}/>;
   const categories = categoriesQuery.data;
 
   return (
@@ -79,6 +80,7 @@ export default function ProductCreatePage() {
         </Button>
       </div>
 
+      {/* Body */}
       <div className={"flex gap-4"}>
         {/* Left part */}
         <div className={"w-full flex flex-col gap-4"}>
@@ -86,11 +88,11 @@ export default function ProductCreatePage() {
           <Card className={"p-4"}>
             <div className={"flex flex-col gap-2"}>
               <div className={"text-sm"}>Name</div>
-              <Input className={"border-muted-foreground"} value={name} onChange={(e) => setName(e.target.value)}/>
+              <Input value={name} onChange={(e) => setName(e.target.value)}/>
             </div>
             <div className={"flex flex-col gap-2"}>
               <div className={"text-sm"}>Description</div>
-              <Input className={"border-muted-foreground"} value={description} onChange={(e) => setDescription(e.target.value)}/>
+              <Input value={description} onChange={(e) => setDescription(e.target.value)}/>
             </div>
             <div className={"flex flex-col gap-2"}>
               <div className={"text-sm"}>Images</div>
@@ -114,7 +116,6 @@ export default function ProductCreatePage() {
               <div className={"flex flex-col gap-2"}>
                 <div className={"text-sm"}>Base Price (VND)</div>
                 <Input
-                  className={"border-muted-foreground"}
                   value={basePrice}
                   onChange={(e) => setBasePrice(e.target.value)}
                   type={"number"}
@@ -123,7 +124,6 @@ export default function ProductCreatePage() {
               <div className={"flex flex-col gap-2"}>
                 <div className={"text-sm"}>Compare Price (VND) (optional)</div>
                 <Input
-                  className={"border-muted-foreground"}
                   value={comparePrice}
                   onChange={(e) => setComparePrice(e.target.value)}
                   type={"number"}
@@ -138,7 +138,7 @@ export default function ProductCreatePage() {
             </div>
           </Card>
 
-          {/* Options card */}
+          {/* Options list card */}
           <Card className="p-4 gap-4">
             <div className="flex justify-between items-center">
               <div className="text-sm font-[600]">Options</div>
@@ -157,8 +157,8 @@ export default function ProductCreatePage() {
             </div>
 
             <div className="flex flex-col gap-4">
-              {options.map((option, optionIndex) => (
-                <Card key={optionIndex} className="p-4">
+              {options.map((option, index) => (
+                <Card key={index} className="p-4">
                   {/* Option Header */}
                   <div className="flex gap-4 items-end mb-2">
                     <div className="w-full flex flex-col gap-2">
@@ -167,16 +167,15 @@ export default function ProductCreatePage() {
                         value={option.name}
                         onChange={e => {
                           const newOptions = [...options];
-                          newOptions[optionIndex].name = e.target.value;
+                          newOptions[index].name = e.target.value;
                           setOptions(newOptions);
                         }}
-                        className={"border-muted-foreground"}
                       />
                     </div>
                     <Button
                       onClick={() => {
                         const newOptions = [...options];
-                        newOptions[optionIndex].selections.push({ name: "", priceChange: "" });
+                        newOptions[index].selections.push({ name: "", priceChange: "" });
                         setOptions(newOptions);
                       }}
                       variant="outline"
@@ -186,7 +185,7 @@ export default function ProductCreatePage() {
                     </Button>
                     <Button
                       onClick={() => {
-                        setOptions(prev => prev.filter((_, i) => i !== optionIndex));
+                        setOptions(prev => prev.filter((_, i) => i !== index));
                       }}
                       variant="destructive"
                       className="cursor-pointer"
@@ -198,17 +197,16 @@ export default function ProductCreatePage() {
                   {/* Selections */}
                   <div className="flex flex-col gap-2">
                     <div className={"text-sm"}>Selections and Price changes (đ)</div>
-                    {option.selections.map((selection, selIndex) => (
+                    {option.selections.map((selection: any, selIndex: number) => (
                       <div className="flex gap-4 items-center" key={selIndex}>
                         <div className="w-full">
                           <Input
                             value={selection.name}
                             onChange={e => {
                               const newOptions = [...options];
-                              newOptions[optionIndex].selections[selIndex].name = e.target.value;
+                              newOptions[index].selections[selIndex].name = e.target.value;
                               setOptions(newOptions);
                             }}
-                            className={"border-muted-foreground"}
                           />
                         </div>
                         <div className="w-[300px]">
@@ -217,17 +215,16 @@ export default function ProductCreatePage() {
                             value={selection.priceChange}
                             onChange={e => {
                               const newOptions = [...options];
-                              newOptions[optionIndex].selections[selIndex].priceChange = e.target.value;
+                              newOptions[index].selections[selIndex].priceChange = e.target.value;
                               setOptions(newOptions);
                             }}
-                            className={"border-muted-foreground"}
                           />
                         </div>
                         <div className="w-[80px] flex justify-center">
                           <Button
                             onClick={() => {
                               const newOptions = [...options];
-                              newOptions[optionIndex].selections.splice(selIndex, 1);
+                              newOptions[index].selections.splice(selIndex, 1);
                               setOptions(newOptions);
                             }}
                             variant="destructive"
@@ -245,7 +242,7 @@ export default function ProductCreatePage() {
             </div>
           </Card>
 
-          {/* Toppings card */}
+          {/* Toppings list card */}
           <Card className={"p-4 gap-4"}>
             <div className={"flex justify-between items-center"}>
               <div className={"text-sm font-[600]"}>Toppings</div>
@@ -265,7 +262,7 @@ export default function ProductCreatePage() {
             </div>
             <div className={"flex flex-col gap-4"}>
               {toppings.map((topping, index) => (
-                <Card key={index} className={"p-4"}>
+                <Card className={"p-4"}>
                   <div className={"flex gap-4 items-center"}>
                     <div className={"w-full flex flex-col gap-2"}>
                       <div className={"text-sm"}>Name</div>
@@ -276,7 +273,6 @@ export default function ProductCreatePage() {
                           newToppings[index].name = e.target.value;
                           setToppings(newToppings);
                         }}
-                        className={"border-muted-foreground"}
                       />
                     </div>
                     <div className={"w-[300px] flex flex-col gap-2"}>
@@ -289,7 +285,6 @@ export default function ProductCreatePage() {
                           setToppings(newToppings);
                         }}
                         type={"number"}
-                        className={"border-muted-foreground"}
                       />
                     </div>
                     <div className={"w-[80px] flex justify-center"}>
@@ -307,12 +302,9 @@ export default function ProductCreatePage() {
                   </div>
                 </Card>
               ))}
-
             </div>
           </Card>
         </div>
-
-
       </div>
     </div>
   );
@@ -322,20 +314,19 @@ export default function ProductCreatePage() {
       <Select
         value={categoryId}
         onValueChange={(value) => {
-          const selected = categories.find((c) => c.id === value)
+          const selected = categories.find((c: any) => c.id === value)
           if (selected) {
             setCategoryId(selected.id)
-            setCategory(selected.name)
           }
         }}
       >
-        <SelectTrigger className="w-full border-muted-foreground">
+        <SelectTrigger className="w-full">
           <SelectValue placeholder="Choose a category"/>
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
             <SelectLabel>Categories</SelectLabel>
-            {categories.map((currentCategory) => (
+            {categories.map((currentCategory: any) => (
               <SelectItem
                 value={currentCategory.id}
                 key={currentCategory.id}
