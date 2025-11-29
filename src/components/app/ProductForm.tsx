@@ -1,188 +1,447 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { useState, useEffect, useRef } from "react";
+import { Button } from "@/components/ui/button.tsx";
+import { Card } from "@/components/ui/card.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx";
+import { OpenAddImageDialogButton } from "@/components/app/OpenAddImageDialogButton.tsx";
+import type { OptionDto, ToppingDto } from "@/service/types.ts";
 import { Plus, Trash } from "lucide-react";
-import { OpenAddImageDialogButton } from "@/components/app/OpenAddImageDialogButton";
-import type { OptionDto, ToppingDto } from "@/service/types";
+import { useQuery } from "@tanstack/react-query";
+import { fetchCategories } from "@/service/fnb-api";
 
-export type ProductFormValues = {
-  name: string;
-  description: string;
-  imgUrls: string[];
-  basePrice: string;
-  comparePrice: string;
-  categoryId: string;
-  options: OptionDto[];
-  toppings: ToppingDto[];
+type ProductFormProps = {
+  initData?: {
+    name: string;
+    description?: string | null;
+    imgUrls?: string[] | null;
+    basePrice?: number | null;
+    comparePrice?: number | null;
+    categoryId?: string | null;
+    options?: OptionDto[] | null;
+    toppings?: ToppingDto[] | null;
+  };
+  onFormDataChange?: (formData: {
+    name: string;
+    description: string;
+    imgUrls: string[];
+    basePrice: string;
+    comparePrice: string;
+    categoryId: string;
+    options: OptionDto[];
+    toppings: ToppingDto[];
+  }) => void;
 };
 
-/* TODO: use this shit */
-export default function ProductForm({ initialValue, categories, submitLabel, onSubmit }: {
-  initialValue: ProductFormValues;
-  categories: any[];
-  submitLabel: string;
-  onSubmit: (data: ProductFormValues) => void;
-}) {
+export function ProductForm({
+  initData,
+  onFormDataChange,
+}: ProductFormProps) {
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [imgUrls, setImgUrls] = useState<string[]>([]);
+  const [basePrice, setBasePrice] = useState("");
+  const [comparePrice, setComparePrice] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+  const [options, setOptions] = useState<OptionDto[]>([]);
+  const [toppings, setToppings] = useState<ToppingDto[]>([]);
+  const onFormDataChangeRef = useRef(onFormDataChange);
 
-  const [state, setState] = useState<ProductFormValues>(initialValue);
-  const { name, description, imgUrls, basePrice, comparePrice, categoryId, options, toppings } = state;
+  const categoriesQuery = useQuery({
+    queryKey: ["categories"],
+    queryFn: () => fetchCategories(), 
+  });
 
-  useEffect(() => setState(initialValue), [initialValue]);
+  // Keep ref updated with latest callback
+  useEffect(() => {
+    onFormDataChangeRef.current = onFormDataChange;
+  }, [onFormDataChange]);
 
-  const update = (patch: Partial<ProductFormValues>) =>
-    setState(prev => ({ ...prev, ...patch }));
+  // Initialize form from initData
+  useEffect(() => {
+    if (initData) {
+      setName(initData.name ?? "");
+      setDescription(initData.description ?? "");
+      setImgUrls(initData.imgUrls ?? []);
+      setBasePrice(String(initData.basePrice ?? ""));
+      setComparePrice(String(initData.comparePrice ?? ""));
+      setCategoryId(initData.categoryId ?? "");
 
-  const updateOption = (index: number, patch: Partial<OptionDto>) =>
-    update({
-      options: options.map((o, i) => (i === index ? { ...o, ...patch } : o))
-    });
+      // Normalize options - convert priceChange to string
+      const normalizedOptions = (initData.options ?? []).map(
+        (option) => ({
+          name: option.name ?? "",
+          selections: (option.selections ?? []).map(
+            (selection: any) => ({
+              name: selection.name ?? "",
+              priceChange: String(selection.priceChange ?? ""),
+            })
+          ),
+        })
+      );
+      setOptions(normalizedOptions);
 
-  const updateTopping = (index: number, patch: Partial<ToppingDto>) =>
-    update({
-      toppings: toppings.map((t, i) => (i === index ? { ...t, ...patch } : t))
-    });
+      // Normalize toppings - convert priceChange to string
+      const normalizedToppings = (initData.toppings ?? []).map(
+        (topping: any) => ({
+          name: topping.name ?? "",
+          priceChange: String(topping.priceChange ?? ""),
+        })
+      );
+      setToppings(normalizedToppings);
+    }
+  }, [initData]);
 
+  // Notify parent of form data changes
+  useEffect(() => {
+    if (onFormDataChangeRef.current) {
+      onFormDataChangeRef.current({
+        name,
+        description,
+        imgUrls,
+        basePrice,
+        comparePrice,
+        categoryId,
+        options,
+        toppings,
+      });
+    }
+  }, [
+    name,
+    description,
+    imgUrls,
+    basePrice,
+    comparePrice,
+    categoryId,
+    options,
+    toppings,
+  ]);
 
   return (
-    <div className="flex flex-col gap-4">
-
-      {/* General Info */}
-      <Card className="p-4 flex flex-col gap-3">
-        <Input value={name} onChange={(e) => update({ name: e.target.value })} placeholder="Product name" />
-        <Input value={description} onChange={(e) => update({ description: e.target.value })} placeholder="Description" />
-
-        <div className="flex gap-4 items-center">
-          {imgUrls.map(url => (
-            <img key={url} src={url} className="h-20 w-20 rounded object-cover" />
-          ))}
-          <OpenAddImageDialogButton onUploaded={(url) => update({ imgUrls: [...imgUrls, url] })} />
+    <div className={"w-full flex flex-col gap-4"}>
+      {/* General info card */}
+      <Card className={"p-4"}>
+        <div className={"flex flex-col gap-2"}>
+          <div className={"text-sm"}>Name</div>
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
         </div>
-
-        <Input type="number" value={basePrice} onChange={(e) => update({ basePrice: e.target.value })} placeholder="Base price" />
-        <Input type="number" value={comparePrice} onChange={(e) => update({ comparePrice: e.target.value })} placeholder="Compare price" />
-
-        <select
-          value={categoryId}
-          onChange={e => update({ categoryId: e.target.value })}
-          className="border rounded p-2"
-        >
-          <option value="">Select category</option>
-          {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-        </select>
+        <div className={"flex flex-col gap-2"}>
+          <div className={"text-sm"}>Description</div>
+          <Input
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+        </div>
+        <div className={"flex flex-col gap-2"}>
+          <div className={"text-sm"}>Images</div>
+          <div className={"flex gap-4"}>
+            {imgUrls.map((imgUrl) => (
+              <img
+                key={imgUrl}
+                src={imgUrl}
+                alt={imgUrl}
+                className={
+                  "h-20 w-20 rounded-md border border-muted-foreground"
+                }
+              />
+            ))}
+            <OpenAddImageDialogButton
+              onUploaded={(url) => {
+                setImgUrls((prev) => [...prev, url]);
+              }}
+            />
+          </div>
+        </div>
+        <div className={"grid grid-cols-2 w-full gap-4"}>
+          <div className={"flex flex-col gap-2"}>
+            <div className={"text-sm"}>Base Price (VND)</div>
+            <Input
+              value={basePrice}
+              onChange={(e) => setBasePrice(e.target.value)}
+              type={"number"}
+            />
+          </div>
+          <div className={"flex flex-col gap-2"}>
+            <div className={"text-sm"}>
+              Compare Price (VND) (optional)
+            </div>
+            <Input
+              value={comparePrice}
+              onChange={(e) => setComparePrice(e.target.value)}
+              type={"number"}
+            />
+          </div>
+        </div>
+        <div className={"flex flex-col gap-2"}>
+          <div className={"text-sm"}>Category</div>
+          <div className={"w-full"}>
+            <Select
+              value={categoryId}
+              onValueChange={(value) => {
+                const selected = categoriesQuery.data?.find(
+                  (c) => c.id === value
+                );
+                if (selected) {
+                  setCategoryId(selected.id);
+                }
+              }}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Choose a category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Categories</SelectLabel>
+                  {categoriesQuery.data?.map((currentCategory) => (
+                    <SelectItem
+                      value={currentCategory.id}
+                      key={currentCategory.id}
+                    >
+                      {currentCategory.name}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </Card>
 
-
-      {/* Options */}
-      <Card className="p-4 flex flex-col gap-4">
+      {/* Options list card */}
+      <Card className="p-4 gap-4">
         <div className="flex justify-between items-center">
-          <div className="font-semibold">Options</div>
-          <Button variant="outline" onClick={() =>
-            update({ options: [...options, { name: "", selections: [{ name: "", priceChange: "" }] }] })
-          }>
+          <div className="text-sm font-[600]">Options</div>
+          <Button
+            onClick={() => {
+              setOptions((prev) => [
+                ...prev,
+                {
+                  name: "",
+                  selections: [{ name: "", priceChange: "" }],
+                },
+              ]);
+            }}
+            variant="outline"
+            className="cursor-pointer"
+          >
             <Plus /> Add option
           </Button>
         </div>
 
-        {options.map((option, index) => (
-          <Card key={index} className="p-4 flex flex-col gap-3">
-            <div className="flex items-center gap-3">
-              <Input
-                value={option.name}
-                onChange={(e) => updateOption(index, { name: e.target.value })}
-                placeholder="Option name"
-              />
-
-              <Button variant="outline" onClick={() =>
-                updateOption(index, { selections: [...option.selections, { name: "", priceChange: "" }] })
-              }>
-                <Plus /> Add selection
-              </Button>
-
-              <Button variant="destructive" onClick={() =>
-                update({ options: options.filter((_, i) => i !== index) })
-              }>
-                Delete
-              </Button>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              {option.selections.map((selection, selIndex) => (
-                <div key={selIndex} className="flex gap-3 items-center">
+        <div className="flex flex-col gap-4">
+          {options.map((option, index) => (
+            <Card key={index} className="p-4">
+              {/* Option Header */}
+              <div className="flex gap-4 items-end mb-2">
+                <div className="w-full flex flex-col gap-2">
+                  <div className="text-sm">Option Name</div>
                   <Input
-                    value={selection.name}
+                    value={option.name}
                     onChange={(e) => {
-                      const newSelections = option.selections.map((s, i) =>
-                        i === selIndex ? { ...s, name: e.target.value } : s
-                      );
-                      updateOption(index, { selections: newSelections });
+                      const newOptions = [...options];
+                      newOptions[index].name =
+                        e.target.value;
+                      setOptions(newOptions);
                     }}
-                    placeholder="Selection name"
                   />
-                  <Input
-                    type="number"
-                    value={selection.priceChange}
-                    onChange={(e) => {
-                      const newSelections = option.selections.map((s, i) =>
-                        i === selIndex ? { ...s, priceChange: e.target.value } : s
-                      );
-                      updateOption(index, { selections: newSelections });
-                    }}
-                    placeholder="Price change"
-                  />
-                  <Button
-                    variant="destructive"
-                    size="icon-sm"
-                    onClick={() =>
-                      updateOption(index, {
-                        selections: option.selections.filter((_, i) => i !== selIndex)
-                      })
-                    }
-                  >
-                    <Trash />
-                  </Button>
                 </div>
-              ))}
-            </div>
-          </Card>
-        ))}
+                <Button
+                  onClick={() => {
+                    const newOptions = [...options];
+                    newOptions[index].selections.push({
+                      name: "",
+                      priceChange: "",
+                    });
+                    setOptions(newOptions);
+                  }}
+                  variant="outline"
+                  className="cursor-pointer"
+                >
+                  <Plus /> Add selection
+                </Button>
+                <Button
+                  onClick={() => {
+                    setOptions((prev) =>
+                      prev.filter((_, i) => i !== index)
+                    );
+                  }}
+                  variant="destructive"
+                  className="cursor-pointer"
+                >
+                  Delete
+                </Button>
+              </div>
+
+              {/* Selections */}
+              <div className="flex flex-col gap-2">
+                <div className={"text-sm"}>
+                  Selections and Price changes (đ)
+                </div>
+                {option.selections.map(
+                  (selection: any, selIndex: number) => (
+                    <div
+                      className="flex gap-4 items-center"
+                      key={selIndex}
+                    >
+                      <div className="w-full">
+                        <Input
+                          value={selection.name}
+                          onChange={(e) => {
+                            const newOptions = [
+                              ...options,
+                            ];
+                            newOptions[
+                              index
+                            ].selections[
+                              selIndex
+                            ].name = e.target.value;
+                            setOptions(newOptions);
+                          }}
+                        />
+                      </div>
+                      <div className="w-[300px]">
+                        <Input
+                          type="number"
+                          value={
+                            selection.priceChange
+                          }
+                          onChange={(e) => {
+                            const newOptions = [
+                              ...options,
+                            ];
+                            newOptions[
+                              index
+                            ].selections[
+                              selIndex
+                            ].priceChange =
+                              e.target.value;
+                            setOptions(newOptions);
+                          }}
+                        />
+                      </div>
+                      <div className="w-[80px] flex justify-center">
+                        <Button
+                          onClick={() => {
+                            const newOptions = [
+                              ...options,
+                            ];
+                            newOptions[
+                              index
+                            ].selections.splice(
+                              selIndex,
+                              1
+                            );
+                            setOptions(newOptions);
+                          }}
+                          variant="destructive"
+                          size="icon-sm"
+                          className={
+                            "bg-destructive/20 hover:bg-destructive/20 cursor-pointer"
+                          }
+                        >
+                          <Trash
+                            className={
+                              "text-destructive"
+                            }
+                          />
+                        </Button>
+                      </div>
+                    </div>
+                  )
+                )}
+              </div>
+            </Card>
+          ))}
+        </div>
       </Card>
 
-
-      {/* Toppings */}
-      <Card className="p-4 flex flex-col gap-4">
-        <div className="flex justify-between items-center">
-          <div className="font-semibold">Toppings</div>
-          <Button variant="outline" onClick={() =>
-            update({ toppings: [...toppings, { name: "", priceChange: "" }] })
-          }>
-            <Plus /> Add topping
+      {/* Toppings list card */}
+      <Card className={"p-4 gap-4"}>
+        <div className={"flex justify-between items-center"}>
+          <div className={"text-sm font-[600]"}>Toppings</div>
+          <Button
+            onClick={() => {
+              setToppings((prev) => [
+                ...prev,
+                {
+                  name: "",
+                  priceChange: "",
+                },
+              ]);
+            }}
+            variant={"outline"}
+            className={"cursor-pointer"}
+          >
+            <Plus />
+            Add topping
           </Button>
         </div>
-
-        {toppings.map((topping, index) => (
-          <Card key={index} className="p-4 flex flex-col gap-3">
-            <Input
-              value={topping.name}
-              onChange={(e) => updateTopping(index, { name: e.target.value })}
-              placeholder="Topping name"
-            />
-            <Input
-              type="number"
-              value={topping.priceChange}
-              onChange={(e) => updateTopping(index, { priceChange: e.target.value })}
-              placeholder="Price change"
-            />
-            <Button variant="destructive" onClick={() =>
-              update({ toppings: toppings.filter((_, i) => i !== index) })
-            }>
-              Remove
-            </Button>
-          </Card>
-        ))}
+        <div className={"flex flex-col gap-4"}>
+          {toppings.map((topping, index) => (
+            <Card key={index} className={"p-4"}>
+              <div className={"flex gap-4 items-center"}>
+                <div className={"w-full flex flex-col gap-2"}>
+                  <div className={"text-sm"}>Name</div>
+                  <Input
+                    value={topping.name}
+                    onChange={(e) => {
+                      const newToppings = [...toppings];
+                      newToppings[index].name =
+                        e.target.value;
+                      setToppings(newToppings);
+                    }}
+                  />
+                </div>
+                <div
+                  className={"w-[300px] flex flex-col gap-2"}
+                >
+                  <div className={"text-sm"}>
+                    Price change (đ)
+                  </div>
+                  <Input
+                    value={topping.priceChange}
+                    onChange={(e) => {
+                      const newToppings = [...toppings];
+                      newToppings[index].priceChange =
+                        e.target.value;
+                      setToppings(newToppings);
+                    }}
+                    type={"number"}
+                  />
+                </div>
+                <div className={"w-[80px] flex justify-center"}>
+                  <Button
+                    onClick={() => {
+                      setToppings((prev) =>
+                        prev.filter(
+                          (_, i) => i !== index
+                        )
+                      );
+                    }}
+                    variant={"destructive"}
+                    size={"icon-sm"}
+                    className={
+                      "bg-destructive/20 hover:bg-destructive/20 cursor-pointer"
+                    }
+                  >
+                    <Trash className={"text-destructive"} />
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
       </Card>
-
-      <Button onClick={() => onSubmit(state)}>{submitLabel}</Button>
     </div>
   );
 }

@@ -14,7 +14,7 @@ import { fetchProducts } from "@/service/fnb-api.ts";
 import { Plus } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 
-export default function MenuPage() {
+export default function ProductsPage() {
   const productsQuery = useQuery({
     queryKey: ["products"],
     queryFn: () => fetchProducts(),
@@ -41,40 +41,40 @@ export default function MenuPage() {
             <TableRow>
               <TableHead
                 className={
-                  "text-muted-foreground w-[40px] text-center"
+                  "text-muted-foreground text-center"
                 }
               >
                 No.
               </TableHead>
               <TableHead
                 className={
-                  "text-muted-foreground w-[60px] text-center"
+                  "text-muted-foreground text-center"
                 }
               >
                 Image
               </TableHead>
               <TableHead
-                className={"text-muted-foreground w-[260px]"}
+                className={"text-muted-foreground"}
               >
                 Name
               </TableHead>
               <TableHead
-                className={"text-muted-foreground w-[120px]"}
+                className={"text-muted-foreground"}
               >
                 Base price
               </TableHead>
               <TableHead
-                className={"text-muted-foreground w-[200px]"}
+                className={"text-muted-foreground"}
               >
                 Options and Toppings
               </TableHead>
               <TableHead
-                className={"text-muted-foreground w-[160px]"}
+                className={"text-muted-foreground"}
               >
                 Category
               </TableHead>
               <TableHead
-                className={"text-muted-foreground w-[200px]"}
+                className={"text-muted-foreground"}
               >
                 Status
               </TableHead>
@@ -144,3 +144,4 @@ export default function MenuPage() {
     </div>
   );
 }
+

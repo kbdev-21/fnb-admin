@@ -1,6 +1,6 @@
 import LoginPage from "@/pages/LoginPage.tsx";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import MenuPage from "@/pages/MenuPage.tsx";
+import ProductsPage from "@/pages/ProductsPage.tsx";
 import MainLayout from "@/components/layout/MainLayout.tsx";
 import OrdersPage from "@/pages/OrdersPage.tsx";
 import CustomersPage from "@/pages/CustomersPage.tsx";
@@ -26,7 +26,7 @@ function App() {
                                 path="/"
                                 element={<Navigate to="/dashboard" replace />}
                             />
-                            <Route path="/menu" element={<MenuPage />} />
+                            <Route path="/menu" element={<ProductsPage />} />
                             <Route
                                 path="/menu/new-product"
                                 element={<ProductCreatePage />}
