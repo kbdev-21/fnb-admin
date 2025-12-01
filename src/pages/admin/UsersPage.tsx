@@ -1,6 +1,6 @@
 import { Spinner } from "@/components/ui/spinner";
 import { useAuth } from "@/contexts/AuthContext";
-import { assignStaffToStore, fetchStores, fetchUsers } from "@/service/fnb-api";
+import { assignStaffToStore, fetchStores, fetchUsers } from "@/api/fnb-api";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   Table,
@@ -11,9 +11,8 @@ import {
   TableRow,
 } from "@/components/ui/table.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Ban, BookUp, ChevronDown, Search } from "lucide-react";
-import { uppercaseFirstLetter } from "@/utils/string-utils.ts";
-import TextTooltip from "@/components/app/TextTooltip";
+import { Ban, BookUp, Search } from "lucide-react";
+import { RoleBadge } from "@/components/app/RoleBadge";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { SimpleSelectDropdown } from "@/components/app/SelectDropdown";
@@ -26,13 +25,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import type { Store, User } from "@/service/types";
+import type { Store, User } from "@/api/types";
 
 export default function UsersPage() {
   const auth = useAuth();
 
   const [pageNumber, setPageNumber] = useState(0);
-  const [sortBy, setSortBy] = useState("firstName");
+  const [sortBy, setSortBy] = useState("-createdAt");
   const [searchKey, setSearchKey] = useState("");
   const [searchInput, setSearchInput] = useState("");
 
@@ -147,18 +146,17 @@ export default function UsersPage() {
                       </TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell>
-                        <div className="flex gap-1">
-                          <div className="font-[600]">
-                            {uppercaseFirstLetter(
-                              user.role
-                            )}
-                          </div>
-                          <div>
-                            {user.role === "STAFF"
-                              ? ` at ${user.staffOfStoreCode}`
-                              : ""}
-                          </div>
-                        </div>
+                        <RoleBadge
+                          role={
+                            user.role as
+                            | "CUSTOMER"
+                            | "STAFF"
+                            | "ADMIN"
+                          }
+                          storeCode={
+                            user.staffOfStoreCode
+                          }
+                        />
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
@@ -172,15 +170,13 @@ export default function UsersPage() {
                               usersQuery.refetch
                             }
                           />
-                          <TextTooltip text="Ban user">
-                            <Button
-                              variant="outline"
-                              size="icon-sm"
-                              className="cursor-pointer"
-                            >
-                              <Ban className="text-destructive" />
-                            </Button>
-                          </TextTooltip>
+                          <Button
+                            variant="outline"
+                            size="icon-sm"
+                            className="cursor-pointer"
+                          >
+                            <Ban className="text-destructive" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -205,6 +201,8 @@ export default function UsersPage() {
 
   function SortSelector() {
     const sortOptions = [
+      { label: "Newest", value: "-createdAt" },
+      { label: "Oldest", value: "createdAt" },
       { label: "First name (A-Z)", value: "firstName" },
       { label: "First name (Z-A)", value: "-firstName" },
       { label: "Phone number (Ascending)", value: "phoneNum" },
@@ -249,7 +247,7 @@ function AssignStaffDialogButton({
         selectedStore ?? ""
       ),
     onSuccess: () => {
-      alert("Assign store staff successfully!");
+      alert("Assign staff successfully!");
       setIsOpen(false);
       refetchUsers();
     },
@@ -260,21 +258,19 @@ function AssignStaffDialogButton({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <TextTooltip text="Assign store staff">
-        <DialogTrigger asChild>
-          <Button
-            variant="outline"
-            size="icon-sm"
-            disabled={selectedUser.role !== "CUSTOMER"}
-            className="cursor-pointer"
-          >
-            <BookUp />
-          </Button>
-        </DialogTrigger>
-      </TextTooltip>
+      <DialogTrigger asChild>
+        <Button
+          variant="outline"
+          size="icon-sm"
+          disabled={selectedUser.role !== "CUSTOMER"}
+          className="cursor-pointer"
+        >
+          <BookUp />
+        </Button>
+      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Assign Store Staff</DialogTitle>
+          <DialogTitle>Assign Staff</DialogTitle>
           <DialogDescription>
             Assign {selectedUser?.firstName}{" "}
             {selectedUser?.lastName} to a store.

@@ -6,7 +6,7 @@ import {
     useEffect,
 } from "react";
 import { jwtDecode } from "jwt-decode";
-import type { User } from "@/service/types.ts";
+import type { User } from "@/api/types";
 
 type AuthContextType = {
     token: string | null;

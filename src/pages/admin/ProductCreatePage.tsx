@@ -2,11 +2,10 @@ import { ChevronRight, Utensils } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import { useRef } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { createProduct, fetchCategories } from "@/service/fnb-api.ts";
+import { createProduct, fetchCategories } from "@/api/fnb-api";
 import { ProductForm } from "@/components/app/ProductForm.tsx";
 import { useAuth } from "@/contexts/AuthContext.tsx";
 import { Link, useNavigate } from "react-router-dom";
-import { Spinner } from "@/components/ui/spinner.tsx";
 
 export default function ProductCreatePage() {
   const auth = useAuth();
