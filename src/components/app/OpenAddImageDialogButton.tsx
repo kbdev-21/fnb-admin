@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ImagePlus } from "lucide-react";
 import { uploadImage } from "@/api/fnb-api";
-import { useAuth } from "@/contexts/AuthContext.tsx";
+import { useAuth } from "@/contexts/auth-context";
 
 export function OpenAddImageDialogButton({
     onUploaded,

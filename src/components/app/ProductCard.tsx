@@ -9,6 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Plus, Minus } from "lucide-react";
+import { useOrder } from "@/contexts/order-context";
 
 export default function ProductCard({ product }: { product: Product }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -56,6 +57,8 @@ function ProductDetailDialog({
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
 }) {
+  const { increaseLineQuantity } = useOrder();
+
   const [selectedSelections, setSelectedSelections] = useState<
     Record<string, string>
   >({});
@@ -362,14 +365,16 @@ function ProductDetailDialog({
                     className="cursor-pointer"
                     onClick={() => {
                       // TODO: Add to order logic
-                      console.log("Add to Order", {
-                        product: productQuery.data,
-                        quantity,
-                        selectedSelections,
-                        selectedToppings,
-                        totalPrice:
-                          totalPrice * quantity,
-                      });
+                      increaseLineQuantity(
+                        productQuery.data?.id || "",
+                        Object.entries(selectedSelections).map(([optionId, selectionId]) => ({
+                          optionId,
+                          selectionId,
+                        })),
+                        Array.from(selectedToppings),
+                        quantity
+                      );
+                      setIsOpen(false);
                     }}
                   >
                     Add to order

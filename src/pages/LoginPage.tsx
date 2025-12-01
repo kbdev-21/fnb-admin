@@ -3,90 +3,91 @@ import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
 import { useMutation } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { useAuth } from "@/contexts/AuthContext.tsx";
+import { useAuth } from "@/contexts/auth-context";
 import { useNavigate } from "react-router-dom";
 import { login } from "@/api/fnb-api";
 
 export default function LoginPage() {
-  const auth = useAuth();
-  const navigate = useNavigate();
+    const auth = useAuth();
+    const navigate = useNavigate();
 
-  useEffect(() => {
-    if (auth.isReady && auth.isLoggedIn()) {
-      navigate("/");
-    }
-  }, [auth, navigate]);
+    useEffect(() => {
+        if (auth.isReady && auth.isLoggedIn()) {
+            navigate("/");
+        }
+    }, [auth, navigate]);
 
-  const [phoneNumOrEmail, setPhoneNumOrEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [errorText, setErrorText] = useState("");
+    const [phoneNumOrEmail, setPhoneNumOrEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [errorText, setErrorText] = useState("");
 
-  const loginMutation = useMutation({
-    mutationFn: () => login(phoneNumOrEmail, password),
-    onSuccess: (data) => {
-      if (data.user.role === "CUSTOMER") {
-        setErrorText("Thông tin đăng nhập không chính xác");
-        return;
-      }
-      auth.setTokenAndMyInfo(data.token, data.user);
-      navigate("/");
-    },
-    onError: () => {
-      setErrorText("Thông tin đăng nhập không chính xác");
-    },
-  });
-
-  return (
-    <div className={"w-full flex justify-center pt-10 px-2"}>
-      <Card className={"max-w-[500px] w-full px-8"}>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            loginMutation.mutate();
-          }}
-          className={"flex flex-col gap-4 items-center"}
-        >
-          <div className={"mb-4 text-xl font-[600]"}>
-            Admin Dashboard F&B
-          </div>
-          <div className={"flex flex-col items-start w-full gap-2"}>
-            <div>Nhập Email hoặc Số điện thoại</div>
-            <Input
-              onChange={(e) => {
-                setPhoneNumOrEmail(e.target.value);
-              }}
-              value={phoneNumOrEmail}
-              type={"text"}
-              placeholder={"Email/SĐT"}
-            />
-          </div>
-          <div className={"flex flex-col items-start w-full gap-2"}>
-            <div>Nhập mật khẩu</div>
-            <Input
-              onChange={(e) => {
-                setPassword(e.target.value);
-              }}
-              value={password}
-              type={"password"}
-              placeholder={"Mật khẩu"}
-            />
-          </div>
-          <div
-            className={`${errorText === "" && "hidden"
-              } text-destructive text-center text-sm w-full gap-2`}
-          >
-            {errorText}
-          </div>
-          <Button
-            type={"submit"}
-            className={
-              "mt-6 w-fit px-10 py-6 rounded-full cursor-pointer"
+    const loginMutation = useMutation({
+        mutationFn: () => login(phoneNumOrEmail, password),
+        onSuccess: (data) => {
+            if (data.user.role === "CUSTOMER") {
+                setErrorText("Thông tin đăng nhập không chính xác");
+                return;
             }
-          >
-            Đăng nhập
-          </Button>
-        </form>
-      </Card>
-    </div>
-  );
+            auth.setTokenAndMyInfo(data.token, data.user);
+            navigate("/");
+        },
+        onError: () => {
+            setErrorText("Thông tin đăng nhập không chính xác");
+        },
+    });
+
+    return (
+        <div className={"w-full flex justify-center pt-10 px-2"}>
+            <Card className={"max-w-[500px] w-full px-8"}>
+                <form
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        loginMutation.mutate();
+                    }}
+                    className={"flex flex-col gap-4 items-center"}
+                >
+                    <div className={"mb-4 text-xl font-[600]"}>
+                        Admin Dashboard F&B
+                    </div>
+                    <div className={"flex flex-col items-start w-full gap-2"}>
+                        <div>Nhập Email hoặc Số điện thoại</div>
+                        <Input
+                            onChange={(e) => {
+                                setPhoneNumOrEmail(e.target.value);
+                            }}
+                            value={phoneNumOrEmail}
+                            type={"text"}
+                            placeholder={"Email/SĐT"}
+                        />
+                    </div>
+                    <div className={"flex flex-col items-start w-full gap-2"}>
+                        <div>Nhập mật khẩu</div>
+                        <Input
+                            onChange={(e) => {
+                                setPassword(e.target.value);
+                            }}
+                            value={password}
+                            type={"password"}
+                            placeholder={"Mật khẩu"}
+                        />
+                    </div>
+                    <div
+                        className={`${
+                            errorText === "" && "hidden"
+                        } text-destructive text-center text-sm w-full gap-2`}
+                    >
+                        {errorText}
+                    </div>
+                    <Button
+                        type={"submit"}
+                        className={
+                            "mt-6 w-fit px-10 py-6 rounded-full cursor-pointer"
+                        }
+                    >
+                        Đăng nhập
+                    </Button>
+                </form>
+            </Card>
+        </div>
+    );
 }

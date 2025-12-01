@@ -112,3 +112,38 @@ export type Discount = {
     createdAt: string;
     expiredAt: string | null;
 };
+
+export type OrderPreviewLineSelectedOption = {
+    name: string;
+    selection: string;
+    priceChange: number;
+};
+
+export type OrderPreviewLineSelectedTopping = {
+    name: string;
+    priceChange: number;
+};
+
+export type OrderPreviewLine = {
+    productId: string;
+    productName: string;
+    productImgUrl: string;
+    selectedOptions: OrderPreviewLineSelectedOption[];
+    selectedToppings: OrderPreviewLineSelectedTopping[];
+    basePrice: number;
+    unitPrice: number;
+    quantity: number;
+    lineAmount: number;
+};
+
+export type OrderPreview = {
+    storeCode: string;
+    orderMethod: "PICK_UP" | "DELIVERY";
+    discountCode: string | null;
+    subtotalAmount: number;
+    discountAmount: number;
+    deliveryFee: number;
+    totalAmount: number;
+    createdAt: string;
+    lines: OrderPreviewLine[];
+};
