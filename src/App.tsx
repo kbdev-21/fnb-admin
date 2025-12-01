@@ -16,6 +16,7 @@ import CategoriesPage from "@/pages/admin/CategoriesPage";
 import LandingPage from "./pages/LandingPage";
 import WebLayout from "./components/layout/WebLayout";
 import MenuPage from "./pages/MenuPage";
+import CheckoutPage from "./pages/CheckoutPage";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ function App() {
               <Route element={<WebLayout />}>
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/menu" element={<MenuPage />} />
+                <Route path="/checkout" element={<CheckoutPage />} />
               </Route>
               <Route element={<AdminLayout />}>
                 <Route

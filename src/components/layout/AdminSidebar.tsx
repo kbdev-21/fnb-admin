@@ -31,7 +31,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/auth-context";
 import { Separator } from "@/components/ui/separator.tsx";
 import { SidebarGroupLabel } from "@/components/ui/sidebar.tsx";
-import { RoleBadge } from "../app/RoleBadge";
+import RoleBadge from "../app/RoleBadge";
 
 export default function AdminSidebar() {
     const location = useLocation();

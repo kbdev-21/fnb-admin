@@ -12,11 +12,11 @@ import {
 } from "@/components/ui/table.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Ban, BookUp, Search } from "lucide-react";
-import { RoleBadge } from "@/components/app/RoleBadge";
+import RoleBadge from "@/components/app/RoleBadge";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { SimpleSelectDropdown } from "@/components/app/SelectDropdown";
-import { CustomPagination } from "@/components/app/CustomPagination";
+import SelectDropdown from "@/components/app/SelectDropdown";
+import CustomPagination from "@/components/app/CustomPagination";
 import {
     Dialog,
     DialogContent,
@@ -214,9 +214,9 @@ export default function UsersPage() {
         ];
 
         return (
-            <SimpleSelectDropdown
+            <SelectDropdown
                 selections={sortOptions}
-                onValueChange={(value) => {
+                onValueChange={(value: string) => {
                     setSortBy(value);
                 }}
                 placeholder="Sort by"
@@ -277,7 +277,7 @@ function AssignStaffDialogButton({
                     </DialogDescription>
                 </DialogHeader>
                 <div className="py-4 flex gap-2">
-                    <SimpleSelectDropdown
+                    <SelectDropdown
                         selections={
                             stores.map((store) => ({
                                 label: store.code,

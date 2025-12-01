@@ -7,6 +7,8 @@ import type {
   Discount,
   Product,
   OrderPreview,
+  Order,
+  OrderCreateRequest,
 } from "@/api/types";
 import type { OrderLine } from "@/contexts/order-context";
 import axios from "axios";
@@ -356,6 +358,18 @@ export async function previewOrder(orderPreviewDto: {
       selectedToppingIds: line.selectedToppingIds,
       quantity: line.quantity,
     })),
+  });
+  return res.data;
+}
+
+export async function createOrder(
+  token: string,
+  orderCreateRequest: OrderCreateRequest
+): Promise<Order> {
+  const res = await axios.post(`${baseUrl}/api/orders`, orderCreateRequest, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   });
   return res.data;
 }

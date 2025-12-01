@@ -23,8 +23,8 @@ import { Spinner } from "@/components/ui/spinner";
 import { Package, Trash, Plus } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useState } from "react";
-import { CustomPagination } from "@/components/app/CustomPagination";
-import { SimpleSelectDropdown } from "@/components/app/SelectDropdown";
+import CustomPagination from "@/components/app/CustomPagination";
+import SelectDropdown from "@/components/app/SelectDropdown";
 import { formatVnd } from "@/utils/string-utils";
 import { formatDateTime } from "@/utils/string-utils";
 
@@ -141,7 +141,7 @@ export default function DiscountsPage() {
                             </div>
                             <div className="flex flex-col gap-2">
                                 <div className="text-sm">Discount Type</div>
-                                <SimpleSelectDropdown
+                                <SelectDropdown
                                     selections={[
                                         {
                                             label: "Fixed Amount",
@@ -152,7 +152,7 @@ export default function DiscountsPage() {
                                             value: "PERCENTAGE",
                                         },
                                     ]}
-                                    onValueChange={(value) =>
+                                    onValueChange={(value: string) =>
                                         setDiscountType(value)
                                     }
                                     placeholder="Select discount type"

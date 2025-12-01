@@ -16,8 +16,8 @@ import { Plus, Search, Package } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { CustomPagination } from "@/components/app/CustomPagination";
-import { SimpleSelectDropdown } from "@/components/app/SelectDropdown";
+import CustomPagination from "@/components/app/CustomPagination";
+import SelectDropdown from "@/components/app/SelectDropdown";
 
 export default function ProductsPage() {
     const [pageNumber, setPageNumber] = useState(0);
@@ -64,7 +64,7 @@ export default function ProductsPage() {
                             <Search />
                         </Button>
                     </form>
-                    <Link to={"/menu/new-product"}>
+                    <Link to={"/admin/menu/new-product"}>
                         <Button className={"cursor-pointer"}>
                             <Plus />
                             New product
@@ -235,9 +235,9 @@ export default function ProductsPage() {
         ];
 
         return (
-            <SimpleSelectDropdown
+            <SelectDropdown
                 selections={sortOptions}
-                onValueChange={(value) => {
+                onValueChange={(value: string) => {
                     setSortBy(value);
                 }}
                 placeholder="Sort by"

@@ -1,5 +1,5 @@
-export function RoleBadge({
-  role,
+export default function RoleBadge({
+  role, 
   storeCode,
 }: {
   role: "CUSTOMER" | "STAFF" | "ADMIN";

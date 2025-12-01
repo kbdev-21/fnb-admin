@@ -12,7 +12,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select.tsx";
-import { OpenAddImageDialogButton } from "@/components/app/OpenAddImageDialogButton.tsx";
+import OpenAddImageDialogButton from "@/components/app/OpenAddImageDialogButton.tsx";
 import type { OptionDto, ToppingDto } from "@/api/types";
 import { Plus, Trash } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -41,7 +41,7 @@ type ProductFormProps = {
     }) => void;
 };
 
-export function ProductForm({ initData, onFormDataChange }: ProductFormProps) {
+export default function ProductForm({ initData, onFormDataChange }: ProductFormProps) {
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
     const [imgUrls, setImgUrls] = useState<string[]>([]);

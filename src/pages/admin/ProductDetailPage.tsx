@@ -9,7 +9,7 @@ import type { Product } from "@/api/types";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ChevronDown, ChevronRight, Utensils } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner.tsx";
-import { ProductForm } from "@/components/app/ProductForm.tsx";
+import ProductForm from "@/components/app/ProductForm.tsx";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import {
@@ -201,11 +201,11 @@ export default function ProductDetailPage() {
                         <Utensils size={16} />
                     </Link>
                     <ChevronRight size={14} />
-                    <div>{product.name}</div>
+                    <div>{product?.name}</div>
                 </div>
                 <div className={"flex gap-2"}>
                     <ActionsButtonDropdown
-                        productName={product.name}
+                        productName={product?.name ?? ""}
                         onDelete={() => deleteProductMutation.mutate()}
                         isDeleting={deleteProductMutation.isPending}
                     />
@@ -224,7 +224,7 @@ export default function ProductDetailPage() {
             <div className={"flex gap-4"}>
                 <ProductForm
                     initData={product}
-                    onFormDataChange={(formData) => {
+                    onFormDataChange={(formData: any) => {
                         formDataRef.current = formData;
                         setFormData(formData);
                     }}

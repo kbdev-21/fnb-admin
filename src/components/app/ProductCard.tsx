@@ -362,7 +362,7 @@ function ProductDetailDialog({
                   </div>
                   <Button
                     size="lg"
-                    className="cursor-pointer"
+                    className="cursor-pointer rounded-full font-bold"
                     onClick={() => {
                       // TODO: Add to order logic
                       increaseLineQuantity(

@@ -7,7 +7,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 
-export function SimpleSelectDropdown({
+export default function SelectDropdown({
     selections,
     onValueChange,
     placeholder = "Select an option",
