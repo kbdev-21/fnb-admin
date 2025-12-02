@@ -17,6 +17,10 @@ import LandingPage from "./pages/LandingPage";
 import WebLayout from "./components/layout/WebLayout";
 import MenuPage from "./pages/MenuPage";
 import CheckoutPage from "./pages/CheckoutPage";
+import OrderDetailPage from "./pages/admin/OrderDetailPage";
+import StaffDashboardPage from "./pages/StaffDashboardPage";
+import SignupPage from "./pages/SignupPage";
+import ProfilePage from "./pages/ProfilePage";
 
 const queryClient = new QueryClient();
 
@@ -28,10 +32,13 @@ function App() {
           <BrowserRouter>
             <Routes>
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
               <Route element={<WebLayout />}>
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/menu" element={<MenuPage />} />
                 <Route path="/checkout" element={<CheckoutPage />} />
+                <Route path="/staff/dashboard" element={<StaffDashboardPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
               </Route>
               <Route element={<AdminLayout />}>
                 <Route
@@ -62,6 +69,10 @@ function App() {
                 <Route
                   path="/admin/orders"
                   element={<OrdersPage />}
+                />
+                <Route
+                  path="/admin/orders/:orderId"
+                  element={<OrderDetailPage />}
                 />
                 <Route
                   path="/admin/discounts"

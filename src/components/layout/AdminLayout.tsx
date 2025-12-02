@@ -9,7 +9,7 @@ export default function AdminLayout() {
   const auth = useAuth();
 
   useEffect(() => {
-    if (auth.isReady && !auth.isLoggedIn() && auth.myInfo?.role !== "ADMIN") {
+    if (auth.isReady && (!auth.isLoggedIn() || auth.myInfo?.role !== "ADMIN")) {
       navigate("/login");
     }
   }, [auth, navigate]);

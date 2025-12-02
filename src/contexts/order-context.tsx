@@ -40,6 +40,7 @@ type OrderContextType = {
     selectedOptions: OrderLineSelectedOption[],
     selectedToppingIds: string[]
   ) => void;
+  clearLines: () => void;
 };
 
 const STORAGE_KEYS = {
@@ -63,7 +64,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
       const stored = localStorage.getItem(STORAGE_KEYS.ORDER_METHOD);
       return stored
         ? (JSON.parse(stored) as "PICK_UP" | "DELIVERY")
-        : "PICK_UP";
+        : "DELIVERY";
     }
   );
 
@@ -206,6 +207,10 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     });
   }
 
+  function clearLines() {
+    setLinesState([]);
+  }
+
   return (
     <OrderContext.Provider
       value={{
@@ -221,6 +226,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
         setLines,
         increaseLineQuantity,
         decreaseLineQuantity,
+        clearLines,
       }}
     >
       {children}

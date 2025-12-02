@@ -39,6 +39,7 @@ export default function UsersPage() {
         queryKey: ["users", pageNumber, sortBy, searchKey],
         queryFn: () =>
             fetchUsers(auth.token ?? "", pageNumber, 20, sortBy, searchKey),
+        enabled: !!auth.token,
     });
 
     const storesQuery = useQuery({

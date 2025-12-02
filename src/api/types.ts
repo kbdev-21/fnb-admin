@@ -8,14 +8,9 @@ export type User = {
   role: string;
   staffOfStoreCode: string;
   createdAt: string;
-  addresses: Address[];
+  avtUrl: string;
 };
 
-export type Address = {
-  type: string;
-  city: string;
-  detail: string;
-};
 
 export type ToppingDto = {
   name: string;
