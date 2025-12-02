@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../ui/button";
 import { useAuth } from "@/contexts/auth-context";
 import {
@@ -11,6 +11,7 @@ import {
 export default function WebNavbar() {
   const auth = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const isLoggedIn = auth.isLoggedIn();
 
@@ -22,10 +23,34 @@ export default function WebNavbar() {
             <img src="/icon.png" alt="logo" className="w-14 h-14" />
           </Link>
         </div>
-        <div className="flex w-[50%] justify-around text-md font-[700] tracking-wider px-[2vw]">
-          <Link to="/menu">MENU</Link>
-          <Link to="/find-a-store">FIND A STORE</Link>
-          <Link to="/contact-us">CONTACT US</Link>
+        <div className="flex w-[50%] h-full justify-around text-md font-[700] tracking-wider px-[2vw]">
+          <Link
+            to="/menu"
+            className={`h-full flex items-center border-b-3 hover:text-primary ${location.pathname === "/menu"
+              ? "border-primary"
+              : "border-transparent"
+              }`}
+          >
+            MENU
+          </Link>
+          <Link
+            to="/stores"
+            className={`h-full flex items-center border-b-3 hover:text-primary ${location.pathname === "/stores"
+              ? "border-primary"
+              : "border-transparent"
+              }`}
+          >
+            FIND A STORE
+          </Link>
+          <Link
+            to="/contact"
+            className={`h-full flex items-center border-b-3 hover:text-primary ${location.pathname === "/contact"
+              ? "border-primary"
+              : "border-transparent"
+              }`}
+          >
+            CONTACT US
+          </Link>
         </div>
         <div className="w-[25%] flex justify-end gap-4 items-center">
           {!isLoggedIn ? (
@@ -74,18 +99,22 @@ export default function WebNavbar() {
           </div>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-            {auth.myInfo?.role === "ADMIN" && (
-              <DropdownMenuItem
-                onClick={() => window.open("/admin", "_blank")}
-              >
-                Admin dashboard
-              </DropdownMenuItem>
-            )}
-            {auth.myInfo?.role === "STAFF" && (
-              <DropdownMenuItem onClick={() => window.open("/staff/dashboard", "_blank")}>
-                Staff dashboard
-              </DropdownMenuItem>
-            )}
+          {auth.myInfo?.role === "ADMIN" && (
+            <DropdownMenuItem
+              onClick={() => window.open("/admin", "_blank")}
+            >
+              Admin dashboard
+            </DropdownMenuItem>
+          )}
+          {auth.myInfo?.role === "STAFF" && (
+            <DropdownMenuItem
+              onClick={() =>
+                window.open("/staff/dashboard", "_blank")
+              }
+            >
+              Staff dashboard
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onClick={() => navigate("/profile")}>
             Profile
           </DropdownMenuItem>

@@ -28,7 +28,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Pencil, Package, MapPin, Clock, CreditCard } from "lucide-react";
+import {
+  Pencil,
+  Package,
+  MapPin,
+  Clock,
+  CreditCard,
+  Check,
+} from "lucide-react";
 import OrderStatusBadge from "@/components/app/OrderStatusBadge";
 import {
   formatVnd,
@@ -138,6 +145,8 @@ export default function StaffDashboardPage() {
         <CompletedOrdersTable
           orders={fulfilledOrdersQuery.data?.content ?? []}
           isLoading={fulfilledOrdersQuery.isLoading}
+          token={auth.token ?? ""}
+          onUpdate={refetchOrders}
         />
       </div>
     </div>
@@ -560,9 +569,13 @@ function EditOrderDialog({
 function CompletedOrdersTable({
   orders,
   isLoading,
+  token,
+  onUpdate,
 }: {
   orders: Order[];
   isLoading: boolean;
+  token: string;
+  onUpdate: () => void;
 }) {
   if (isLoading) {
     return (
@@ -636,6 +649,11 @@ function CompletedOrdersTable({
                   >
                     Created At
                   </TableHead>
+                  <TableHead
+                    className={"text-muted-foreground"}
+                  >
+                    Payment
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -651,9 +669,7 @@ function CompletedOrdersTable({
                         {index + 1}
                       </TableCell>
                       <TableCell className={"font-[600]"}>
-                        
-                          {order.id.slice(0, 8)}...
-                        
+                        {order.id.slice(0, 8)}...
                       </TableCell>
                       <TableCell>
                         {order.customerName}
@@ -688,6 +704,13 @@ function CompletedOrdersTable({
                           order.createdAt
                         ).toLocaleString()}
                       </TableCell>
+                      <TableCell>
+                        <PaymentStatusCell
+                          order={order}
+                          token={token}
+                          onUpdate={onUpdate}
+                        />
+                      </TableCell>
                     </TableRow>
                   );
                 })}
@@ -697,5 +720,87 @@ function CompletedOrdersTable({
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function PaymentStatusCell({
+  order,
+  token,
+  onUpdate,
+}: {
+  order: Order;
+  token: string;
+  onUpdate: () => void;
+}) {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const updatePaymentMutation = useMutation({
+    mutationFn: () =>
+      updateOrderPayment(token, order.id, {
+        paid: true,
+      }),
+    onSuccess: () => {
+      alert("Marked as paid successfully");
+      onUpdate();
+      setIsDialogOpen(false);
+    },
+    onError: () => {
+      alert("Failed to update payment");
+    },
+  });
+
+  return (
+    <>
+      <div className="flex items-center justify-between gap-2">
+        <span
+          className={
+            order.paid
+              ? "text-green-600 font-medium"
+              : "text-destructive font-medium"
+          }
+        >
+          {order.paid ? "Paid" : "Unpaid"}
+        </span>
+        {!order.paid && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={() => setIsDialogOpen(true)}
+            disabled={updatePaymentMutation.isPending}
+          >
+            <Check className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm payment</DialogTitle>
+            <DialogDescription>
+              Do you want to change to Paid?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDialogOpen(false)}
+              disabled={updatePaymentMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => updatePaymentMutation.mutate()}
+              disabled={updatePaymentMutation.isPending}
+            >
+              {updatePaymentMutation.isPending
+                ? "Updating..."
+                : "Confirm"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

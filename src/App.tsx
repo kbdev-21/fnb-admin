@@ -21,6 +21,8 @@ import OrderDetailPage from "./pages/admin/OrderDetailPage";
 import StaffDashboardPage from "./pages/StaffDashboardPage";
 import SignupPage from "./pages/SignupPage";
 import ProfilePage from "./pages/ProfilePage";
+import FindStorePage from "./pages/FindStorePage";
+import ContactUsPage from "./pages/ContactUsPage";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +41,8 @@ function App() {
                 <Route path="/checkout" element={<CheckoutPage />} />
                 <Route path="/staff/dashboard" element={<StaffDashboardPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/stores" element={<FindStorePage />} />
+                <Route path="/contact" element={<ContactUsPage />} />
               </Route>
               <Route element={<AdminLayout />}>
                 <Route
