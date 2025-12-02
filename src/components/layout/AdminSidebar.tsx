@@ -62,7 +62,7 @@ export default function AdminSidebar() {
           <div>
             <img
               src={
-                "https://www.shutterstock.com/image-vector/portrait-cat-glasses-vector-art-600nw-2284410025.jpg"
+                auth.myInfo?.avtUrl ?? ""
               }
               alt={"avt"}
               sizes={"40px"}

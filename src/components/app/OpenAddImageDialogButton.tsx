@@ -17,8 +17,10 @@ import { useAuth } from "@/contexts/auth-context";
 
 export default function OpenAddImageDialogButton({
   onUploaded,
+  triggerChild
 }: {
   onUploaded?: (url: string) => void;
+  triggerChild?: React.ReactNode;
 }) {
   const auth = useAuth();
   const [file, setFile] = useState<File | null>(null);
@@ -40,13 +42,15 @@ export default function OpenAddImageDialogButton({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          className="h-20 w-20 cursor-pointer border-muted-foreground border-dashed"
-        >
-          <ImagePlus />
-        </Button>
+      <DialogTrigger asChild className="cursor-pointer">
+        {triggerChild ?? (
+          <Button
+            variant="outline"
+            className="h-20 w-20 cursor-pointer border-muted-foreground border-dashed"
+          >
+            <ImagePlus />
+          </Button>
+        )}
       </DialogTrigger>
 
       <DialogContent>
