@@ -38,7 +38,7 @@ export default function ProductCreatePage() {
     },
     onSuccess: (data) => {
       alert("Create product successfully!");
-      navigate(`/menu/${data.slug}`);
+      navigate(`/admin/menu/${data.slug}`);
     },
     onError: (err) => {
       alert(err instanceof Error ? err.message : "Upload failed");

@@ -39,7 +39,7 @@ export default function ProfilePage() {
       firstName?: string | null;
       lastName?: string | null;
       avtUrl?: string | null;
-    }) => updateCurrentUserProfile(auth.token ?? "", payload),
+    }) => updateCurrentUserProfile(auth.token ?? "", auth.myInfo?.id ?? "", payload),
     onSuccess: () => {
       alert("Update user profile successfully");
       currentUserQuery.refetch();
@@ -126,12 +126,13 @@ export default function ProfilePage() {
               firstName === user?.firstName &&
               lastName === user?.lastName)
           }
-          onClick={() =>
+          onClick={() => {
             updateUserMutation.mutate({
               firstName,
               lastName,
               avtUrl,
             })
+          }
           }
         >
           Save changes
