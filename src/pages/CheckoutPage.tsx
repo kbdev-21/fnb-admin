@@ -51,7 +51,15 @@ export default function CheckoutPage() {
       alert("Order placed successfully");
       order.clearLines();
       order.setDiscountCode(null);
-      navigate("/");
+      order.setDestination("");
+      if(!auth.isLoggedIn()) {
+        navigate("/");
+      }
+      else if (auth.myInfo?.role === "CUSTOMER") {
+        navigate("/profile");
+      } else {
+        navigate("/menu");
+      }
     },
     onError: (err) => {
       alert(err instanceof Error ? err.message : "Place order failed");
