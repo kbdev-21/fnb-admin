@@ -2,8 +2,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import {
     fetchOrderById,
-    updateOrderStatus,
-    updateOrderPayment,
+    updateOrder,
 } from "@/api/fnb-api";
 import { useAuth } from "@/contexts/auth-context";
 import { useParams, Link } from "react-router-dom";
@@ -35,28 +34,18 @@ export default function OrderDetailPage() {
         enabled: !!auth.token && !!orderId,
     });
 
-    const updateStatusMutation = useMutation({
-        mutationFn: (
-            status: "PENDING" | "PREPARING" | "FULFILLED" | "CANCELED"
-        ) => updateOrderStatus(auth.token ?? "", orderId!, status),
+    const updateOrderMutation = useMutation({
+        mutationFn: (params?: {
+            status?: "PENDING" | "PREPARING" | "FULFILLED" | "CANCELED";
+            paid?: boolean;
+            paymentMethod?: string;
+        }) => updateOrder(auth.token ?? "", orderId!, params),
         onSuccess: () => {
-            alert(`Update status successfully`);
+            alert(`Update order successfully`);
             orderQuery.refetch();
         },
         onError: () => {
-            alert(`Update status failed`);
-        },
-    });
-
-    const updatePaymentMutation = useMutation({
-        mutationFn: (params?: { paid?: boolean; paymentMethod?: string }) =>
-            updateOrderPayment(auth.token ?? "", orderId!, params),
-        onSuccess: () => {
-            alert(`Update payment successfully`);
-            orderQuery.refetch();
-        },
-        onError: () => {
-            alert(`Update payment failed`);
+            alert(`Update order failed`);
         },
     });
 
@@ -397,14 +386,17 @@ export default function OrderDetailPage() {
                 onOpenRef={(openFn) => {
                     dialogOpenRef.current = openFn;
                 }}
+                updateOrderMutation={updateOrderMutation}
             />
         </div>
     );
 
     function EditStatusDialog({
         onOpenRef,
+        updateOrderMutation,
     }: {
         onOpenRef?: (openFn: () => void) => void;
+        updateOrderMutation: ReturnType<typeof useMutation>;
     }) {
         const [isDialogOpen, setIsDialogOpen] = useState(false);
         const [selectedStatus, setSelectedStatus] = useState<
@@ -445,32 +437,35 @@ export default function OrderDetailPage() {
             const hasPaymentMethodChanged =
                 selectedPaymentMethod !== orderQuery.data.paymentMethod;
 
-            if (hasStatusChanged) {
-                updateStatusMutation.mutate(selectedStatus);
-                setIsDialogOpen(false);
-            }
-
-            if (hasPaidChanged || hasPaymentMethodChanged) {
-                const paymentParams: {
-                    paid?: boolean;
-                    paymentMethod?: string;
-                } = {};
-                if (hasPaidChanged) {
-                    paymentParams.paid = selectedPaid === "true";
-                }
-                if (hasPaymentMethodChanged) {
-                    paymentParams.paymentMethod = selectedPaymentMethod;
-                }
-                updatePaymentMutation.mutate(paymentParams);
-            }
-
             if (
                 !hasStatusChanged &&
                 !hasPaidChanged &&
                 !hasPaymentMethodChanged
             ) {
                 setIsDialogOpen(false);
+                return;
             }
+
+            const updateParams: {
+                status?: "PENDING" | "PREPARING" | "FULFILLED" | "CANCELED";
+                paid?: boolean;
+                paymentMethod?: string;
+            } = {};
+
+            if (hasStatusChanged) {
+                updateParams.status = selectedStatus;
+            }
+
+            if (hasPaidChanged) {
+                updateParams.paid = selectedPaid === "true";
+            }
+
+            if (hasPaymentMethodChanged) {
+                updateParams.paymentMethod = selectedPaymentMethod;
+            }
+
+            updateOrderMutation.mutate(updateParams);
+            setIsDialogOpen(false);
         };
 
         return (
@@ -547,13 +542,9 @@ export default function OrderDetailPage() {
                         </Button>
                         <Button
                             onClick={handleSave}
-                            disabled={
-                                updateStatusMutation.isPending ||
-                                updatePaymentMutation.isPending
-                            }
+                            disabled={updateOrderMutation.isPending}
                         >
-                            {updateStatusMutation.isPending ||
-                            updatePaymentMutation.isPending
+                            {updateOrderMutation.isPending
                                 ? "Saving..."
                                 : "Save"}
                         </Button>

@@ -165,6 +165,28 @@ export async function fetchProductBySlug(slug: string): Promise<Product> {
   return res.data;
 }
 
+export async function updateProductAvailability(
+  token: string,
+  productId: string,
+  storeCode: string,
+  available: boolean
+): Promise<Product> {
+  const res = await axios.patch(
+    `${baseUrl}/api/products/${productId}/availability`,
+    {},
+    {
+      params: {
+        storeCode,
+        available,
+      },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  return res.data;
+}
+
 export async function fetchCategories(): Promise<Category[]> {
   const res = await axios.get(`${baseUrl}/api/categories`);
   return res.data;
@@ -488,40 +510,23 @@ export async function createOrder(
   return res.data;
 }
 
-export async function updateOrderStatus(
-  token: string,
-  orderId: string,
-  status: "PENDING" | "PREPARING" | "FULFILLED" | "CANCELED"
-): Promise<Order> {
-  const res = await axios.patch(
-    `${baseUrl}/api/orders/${orderId}/status`,
-    {},
-    {
-      params: {
-        status,
-      },
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
-  return res.data;
-}
-
-export async function updateOrderPayment(
+export async function updateOrder(
   token: string,
   orderId: string,
   params?: {
+    status?: "PENDING" | "PREPARING" | "FULFILLED" | "CANCELED";
     paid?: boolean;
     paymentMethod?: string;
   }
 ): Promise<Order> {
   const queryParams: Record<string, string | boolean> = {};
+
+  if (params?.status) queryParams.status = params.status;
   if (params?.paid !== undefined) queryParams.paid = params.paid;
   if (params?.paymentMethod) queryParams.paymentMethod = params.paymentMethod;
 
   const res = await axios.patch(
-    `${baseUrl}/api/orders/${orderId}/payment`,
+    `${baseUrl}/api/orders/${orderId}`,
     {},
     {
       params: queryParams,

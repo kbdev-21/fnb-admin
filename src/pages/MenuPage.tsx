@@ -18,12 +18,20 @@ import { Plus, Minus, X, Utensils } from "lucide-react";
 import type { OrderPreviewLine } from "@/api/types";
 import { useNavigate } from "react-router-dom";
 import OrderSummary from "@/components/app/OrderSummary";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 export default function MenuPage() {
   const navigate = useNavigate();
 
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const { storeCode, setStoreCode } = useOrder();
+  const [tempStoreCode, setTempStoreCode] = useState<string>("");
 
   const storesQuery = useQuery({
     queryKey: ["stores"],
@@ -39,6 +47,14 @@ export default function MenuPage() {
     queryKey: ["products", selectedCategoryId],
     queryFn: () => fetchProducts("", 0, 20, "name", selectedCategoryId),
   });
+
+  const isStoreDialogOpen = !storeCode || storeCode === "";
+
+  const handleStoreConfirm = () => {
+    if (tempStoreCode) {
+      setStoreCode(tempStoreCode);
+    }
+  };
 
   if (categoriesQuery.isLoading || storesQuery.isLoading) {
     return (
@@ -89,7 +105,49 @@ export default function MenuPage() {
         )}
       </div>
       {/* Right Side */}
-      <OrderSummary buttonText="Proceed to Checkout" buttonOnClick={() => navigate("/checkout")} />
+      <OrderSummary
+        buttonText="Proceed to Checkout"
+        buttonOnClick={() => navigate("/checkout")}
+      />
+
+      {/* Force Store Selection Dialog */}
+      <Dialog open={isStoreDialogOpen} onOpenChange={() => { }}>
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Select a Store</DialogTitle>
+            <DialogDescription>
+              Please select a store to continue
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-4">
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium">Store</label>
+              <SelectDropdown
+                selections={
+                  storesQuery.data?.map((store) => ({
+                    label: store.displayName,
+                    value: store.code,
+                  })) || []
+                }
+                onValueChange={(value: string) =>
+                  setTempStoreCode(value)
+                }
+                placeholder="Select a store"
+                initValue={tempStoreCode || undefined}
+                className="w-full"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <Button
+              onClick={handleStoreConfirm}
+              disabled={!tempStoreCode}
+            >
+              Confirm
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 
@@ -129,4 +187,3 @@ export default function MenuPage() {
     );
   }
 }
-

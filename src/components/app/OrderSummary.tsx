@@ -1,6 +1,4 @@
-import {
-  previewOrder,
-} from "@/api/fnb-api";
+import { previewOrder } from "@/api/fnb-api";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Spinner } from "@/components/ui/spinner";
@@ -9,18 +7,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatVnd } from "@/utils/string-utils";
-import {
-  Plus,
-  Minus,
-  X,
-  Utensils,
-} from "lucide-react";
+import { Plus, Minus, X, Utensils } from "lucide-react";
 import type { OrderPreviewLine } from "@/api/types";
 
-export default function OrderSummary(
-  {buttonText, buttonOnClick}: 
-  {buttonText: string, buttonOnClick: () => void}
-) {
+export default function OrderSummary({
+  buttonText,
+  buttonOnClick,
+}: {
+  buttonText: string;
+  buttonOnClick: () => void;
+}) {
   const {
     storeCode,
     orderMethod,
@@ -30,6 +26,7 @@ export default function OrderSummary(
     increaseLineQuantity,
     decreaseLineQuantity,
     setDiscountCode,
+    clearLines,
   } = useOrder();
 
   const [discountInput, setDiscountInput] = useState(discountCode || "");
@@ -65,7 +62,9 @@ export default function OrderSummary(
 
   useEffect(() => {
     if (discountCode !== null && previewQuery.data?.discountCode === null) {
-      setDiscountAlertText("This code is invalid and will not be applied");
+      setDiscountAlertText(
+        "This code is invalid and will not be applied"
+      );
     } else {
       setDiscountAlertText(null);
     }
@@ -98,7 +97,12 @@ export default function OrderSummary(
         <Card className="sticky top-4">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Utensils className="size-12 text-muted-foreground mb-4" />
-            <p className="text-center">{errorText}</p>
+            <p className="text-center mb-4">{errorText}</p>
+            {previewQuery.error && (
+              <Button variant="outline" onClick={clearLines}>
+                Clear Order
+              </Button>
+            )}
           </CardContent>
         </Card>
       </div>

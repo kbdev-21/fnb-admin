@@ -1,34 +1,71 @@
 import type { Product } from "@/api/types";
 import { formatVnd } from "@/utils/string-utils";
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { useQuery } from "@tanstack/react-query";
-import { fetchProductBySlug } from "@/api/fnb-api";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { fetchProductBySlug, updateProductAvailability } from "@/api/fnb-api";
 import { Spinner } from "@/components/ui/spinner";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { Plus, Minus } from "lucide-react";
+import { Plus, Minus, Settings } from "lucide-react";
 import { useOrder } from "@/contexts/order-context";
+import { useAuth } from "@/contexts/auth-context";
 
 export default function ProductCard({ product }: { product: Product }) {
+  const auth = useAuth();
+  const { storeCode } = useOrder();
+
   const [isOpen, setIsOpen] = useState(false);
+  const [isAvailabilityDialogOpen, setIsAvailabilityDialogOpen] =
+    useState(false);
+
+  const isUnavailable =
+    storeCode && product.unavailableAtStoreCodes.includes(storeCode);
+
+  const isAdminOrStaff =
+    auth.myInfo?.role === "ADMIN" || auth.myInfo?.role === "STAFF";
 
   return (
     <>
       <div
-        className="group flex flex-col gap-3 rounded-4xl border border-border bg-card overflow-hidden transition-all duration-300 cursor-pointer"
-        onClick={() => setIsOpen(true)}
+        className={`group flex flex-col gap-3 rounded-4xl border border-border bg-card overflow-hidden transition-all duration-300 relative ${isUnavailable ? "opacity-50" : "cursor-pointer"
+          }`}
+        onClick={() => !isUnavailable && setIsOpen(true)}
       >
         <div className="relative w-full aspect-square overflow-hidden">
           <img
             src={product.imgUrls[0]}
             alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-400 ease-in-out"
+            className={`w-full h-full object-cover transition-transform duration-400 ease-in-out ${isUnavailable ? "" : "group-hover:scale-110"
+              }`}
           />
+          {isAdminOrStaff && (
+            <Button
+              variant="ghost"
+              size="icon-lg"
+              className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsAvailabilityDialogOpen(true);
+              }}
+            >
+              <Settings />
+            </Button>
+          )}
         </div>
         <div className="flex flex-col gap-2 px-4 pb-4 text-center">
-          <h3 className="text-md font-semibold line-clamp-2 text-primary group-hover:underline transition-colors">
+          <h3
+            className={`text-md font-semibold line-clamp-2 text-primary transition-colors ${isUnavailable ? "" : "group-hover:underline"
+              }`}
+          >
             {product.name}
           </h3>
           <div className="flex items-center justify-center gap-2 mt-1">
@@ -44,7 +81,148 @@ export default function ProductCard({ product }: { product: Product }) {
         isOpen={isOpen}
         setIsOpen={setIsOpen}
       />
+
+      <UpdateProductAvailabilityDialog
+        slug={product.slug}
+        isOpen={isAvailabilityDialogOpen}
+        setIsOpen={setIsAvailabilityDialogOpen}
+      />
     </>
+  );
+}
+
+function UpdateProductAvailabilityDialog({
+  slug,
+  isOpen,
+  setIsOpen
+}: {
+  slug: string;
+  isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void;
+}) {
+  const auth = useAuth();
+
+  const { storeCode } = useOrder();
+  const [authStoreCode, setAuthStoreCode] = useState<string | null>(null);
+
+  const productQuery = useQuery({
+    queryKey: ["product", slug],
+    queryFn: () => fetchProductBySlug(slug),
+  });
+
+  const [isAvailable, setIsAvailable] = useState(false);
+
+  useEffect(() => {
+    if (productQuery.data && authStoreCode) {
+      // If storeCode is NOT in unavailableAtStoreCodes, then it's available
+      const available =
+        !productQuery.data.unavailableAtStoreCodes.includes(authStoreCode);
+      setIsAvailable(available);
+    }
+  }, [productQuery.data, authStoreCode]);
+
+  const updateAvailabilityMutation = useMutation({
+    mutationFn: (available: boolean) => {
+      if (!productQuery.data?.id || !authStoreCode || !auth.token) {
+        throw new Error("Missing required data");
+      }
+      return updateProductAvailability(
+        auth.token,
+        productQuery.data.id,
+        authStoreCode,
+        available
+      );
+    },
+    onSuccess: () => {
+      alert("Product availability updated successfully");
+      setIsOpen(false);
+    },
+    onError: () => {
+      alert("Failed to update product availability");
+    },
+  });
+
+  const isAdminOrStaff =
+    auth.myInfo?.role === "ADMIN" || auth.myInfo?.role === "STAFF";
+
+  useEffect(() => {
+    if (auth.myInfo?.staffOfStoreCode) {
+      setAuthStoreCode(auth.myInfo.staffOfStoreCode);
+    } else {
+      setAuthStoreCode(storeCode);
+    }
+  }, [auth.myInfo?.staffOfStoreCode]);
+
+  if (!isAdminOrStaff) {
+    return null;
+  }
+
+  if (productQuery.isLoading) {
+    return (
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent>
+          <div className="flex justify-center items-center py-8">
+            <Spinner className="text-primary size-8" />
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Update Product Availability</DialogTitle>
+        </DialogHeader>
+        <div className="flex flex-col gap-4 py-4">
+          <div className="flex flex-col gap-2">
+            <div className="text-sm font-medium">Product Name</div>
+            <div className="text-sm text-muted-foreground">
+              {productQuery.data?.name}
+            </div>
+          </div>
+          <div className="flex flex-col gap-2">
+            <div className="text-sm font-medium">Store Code</div>
+            <div className="text-sm text-muted-foreground">
+              {authStoreCode}
+            </div>
+          </div>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col gap-1">
+              <div className="text-sm font-medium">Available</div>
+              <div className="text-xs text-muted-foreground">
+                Toggle product availability for this store
+              </div>
+            </div>
+            <Switch
+              checked={isAvailable}
+              onCheckedChange={setIsAvailable}
+              disabled={updateAvailabilityMutation.isPending}
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => setIsOpen(false)}
+            disabled={updateAvailabilityMutation.isPending}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={() =>
+              updateAvailabilityMutation.mutate(isAvailable)
+            }
+            disabled={updateAvailabilityMutation.isPending}
+          >
+            {updateAvailabilityMutation.isPending
+              ? "Updating..."
+              : "Confirm"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -367,10 +545,17 @@ function ProductDetailDialog({
                       // TODO: Add to order logic
                       increaseLineQuantity(
                         productQuery.data?.id || "",
-                        Object.entries(selectedSelections).map(([optionId, selectionId]) => ({
-                          optionId,
-                          selectionId,
-                        })),
+                        Object.entries(
+                          selectedSelections
+                        ).map(
+                          ([
+                            optionId,
+                            selectionId,
+                          ]) => ({
+                            optionId,
+                            selectionId,
+                          })
+                        ),
                         Array.from(selectedToppings),
                         quantity
                       );

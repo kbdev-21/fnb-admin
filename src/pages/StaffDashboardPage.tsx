@@ -2,11 +2,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  fetchOrders,
-  updateOrderStatus,
-  updateOrderPayment,
-} from "@/api/fnb-api";
+import { fetchOrders, updateOrder } from "@/api/fnb-api";
 import type { Order } from "@/api/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,7 +15,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Link } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
@@ -224,29 +219,19 @@ function OrderCard({
 }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const updateStatusMutation = useMutation({
-    mutationFn: (
-      status: "PENDING" | "PREPARING" | "FULFILLED" | "CANCELED"
-    ) => updateOrderStatus(token, order.id, status),
+  const updateOrderMutation = useMutation({
+    mutationFn: (params?: {
+      status?: "PENDING" | "PREPARING" | "FULFILLED" | "CANCELED";
+      paid?: boolean;
+      paymentMethod?: string;
+    }) => updateOrder(token, order.id, params),
     onSuccess: () => {
-      alert("Update status successfully");
+      alert("Update order successfully");
       onUpdate();
       setIsDialogOpen(false);
     },
     onError: () => {
-      alert("Update status failed");
-    },
-  });
-
-  const updatePaymentMutation = useMutation({
-    mutationFn: (params?: { paid?: boolean; paymentMethod?: string }) =>
-      updateOrderPayment(token, order.id, params),
-    onSuccess: () => {
-      alert("Update payment successfully");
-      onUpdate();
-    },
-    onError: () => {
-      alert("Update payment failed");
+      alert("Update order failed");
     },
   });
 
@@ -401,12 +386,8 @@ function OrderCard({
         order={order}
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
-        onUpdateStatus={updateStatusMutation.mutate}
-        onUpdatePayment={updatePaymentMutation.mutate}
-        isUpdating={
-          updateStatusMutation.isPending ||
-          updatePaymentMutation.isPending
-        }
+        onUpdateOrder={updateOrderMutation.mutate}
+        isUpdating={updateOrderMutation.isPending}
       />
     </>
   );
@@ -416,17 +397,14 @@ function EditOrderDialog({
   order,
   isOpen,
   onClose,
-  onUpdateStatus,
-  onUpdatePayment,
+  onUpdateOrder,
   isUpdating,
 }: {
   order: Order;
   isOpen: boolean;
   onClose: () => void;
-  onUpdateStatus: (
-    status: "PENDING" | "PREPARING" | "FULFILLED" | "CANCELED"
-  ) => void;
-  onUpdatePayment: (params?: {
+  onUpdateOrder: (params?: {
+    status?: "PENDING" | "PREPARING" | "FULFILLED" | "CANCELED";
     paid?: boolean;
     paymentMethod?: string;
   }) => void;
@@ -462,25 +440,30 @@ function EditOrderDialog({
     const hasPaymentMethodChanged =
       selectedPaymentMethod !== order.paymentMethod;
 
-    if (hasStatusChanged) {
-      onUpdateStatus(selectedStatus);
-    }
-
-    if (hasPaidChanged || hasPaymentMethodChanged) {
-      const paymentParams: { paid?: boolean; paymentMethod?: string } =
-        {};
-      if (hasPaidChanged) {
-        paymentParams.paid = selectedPaid === "true";
-      }
-      if (hasPaymentMethodChanged) {
-        paymentParams.paymentMethod = selectedPaymentMethod;
-      }
-      onUpdatePayment(paymentParams);
-    }
-
     if (!hasStatusChanged && !hasPaidChanged && !hasPaymentMethodChanged) {
       onClose();
+      return;
     }
+
+    const updateParams: {
+      status?: "PENDING" | "PREPARING" | "FULFILLED" | "CANCELED";
+      paid?: boolean;
+      paymentMethod?: string;
+    } = {};
+
+    if (hasStatusChanged) {
+      updateParams.status = selectedStatus;
+    }
+
+    if (hasPaidChanged) {
+      updateParams.paid = selectedPaid === "true";
+    }
+
+    if (hasPaymentMethodChanged) {
+      updateParams.paymentMethod = selectedPaymentMethod;
+    }
+
+    onUpdateOrder(updateParams);
   };
 
   return (
@@ -734,11 +717,12 @@ function PaymentStatusCell({
 }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const updatePaymentMutation = useMutation({
-    mutationFn: () =>
-      updateOrderPayment(token, order.id, {
-        paid: true,
-      }),
+  const updateOrderMutation = useMutation({
+    mutationFn: (params?: {
+      status?: "PENDING" | "PREPARING" | "FULFILLED" | "CANCELED";
+      paid?: boolean;
+      paymentMethod?: string;
+    }) => updateOrder(token, order.id, params),
     onSuccess: () => {
       alert("Marked as paid successfully");
       onUpdate();
@@ -767,7 +751,7 @@ function PaymentStatusCell({
             size="icon"
             className="h-7 w-7"
             onClick={() => setIsDialogOpen(true)}
-            disabled={updatePaymentMutation.isPending}
+            disabled={updateOrderMutation.isPending}
           >
             <Check className="h-4 w-4" />
           </Button>
@@ -786,15 +770,17 @@ function PaymentStatusCell({
             <Button
               variant="outline"
               onClick={() => setIsDialogOpen(false)}
-              disabled={updatePaymentMutation.isPending}
+              disabled={updateOrderMutation.isPending}
             >
               Cancel
             </Button>
             <Button
-              onClick={() => updatePaymentMutation.mutate()}
-              disabled={updatePaymentMutation.isPending}
+              onClick={() =>
+                updateOrderMutation.mutate({ paid: true })
+              }
+              disabled={updateOrderMutation.isPending}
             >
-              {updatePaymentMutation.isPending
+              {updateOrderMutation.isPending
                 ? "Updating..."
                 : "Confirm"}
             </Button>
