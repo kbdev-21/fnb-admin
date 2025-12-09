@@ -21,7 +21,7 @@ export default function RoleBadge({
   const getRoleDisplayText = () => {
     switch (role) {
       case "ADMIN":
-        return "Admin";
+        return "Manager";
       case "CUSTOMER":
         return "Customer";
       case "STAFF":

@@ -116,7 +116,7 @@ export default function MenuPage() {
           <DialogHeader>
             <DialogTitle>Select a Store</DialogTitle>
             <DialogDescription>
-              Please select a store to continue
+              Select your nearest store to continue
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-4">
@@ -136,6 +136,31 @@ export default function MenuPage() {
                 initValue={tempStoreCode || undefined}
                 className="w-full"
               />
+              {tempStoreCode && (
+                <div className="mt-2">
+                  {(() => {
+                    const selectedStore =
+                      storesQuery.data?.find(
+                        (store) =>
+                          store.code === tempStoreCode
+                      );
+                    if (!selectedStore) return null;
+                    return (
+                      <div className="flex flex-col gap-1 text-sm">
+                        <div className="font-semibold">
+                          Store: {selectedStore.displayName}
+                        </div>
+                        <div className="text-muted-foreground">
+                          Address: {selectedStore.fullAddress}
+                        </div>
+                        <div className="text-muted-foreground">
+                          City: {selectedStore.city}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
             </div>
           </div>
           <div className="flex justify-end">

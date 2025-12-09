@@ -343,6 +343,18 @@ function OrderCard({
               </div>
             </div>
 
+            {/* Message */}
+            {order.message && (
+              <div className="space-y-1 pt-2 border-t">
+                <div className="text-xs font-semibold text-muted-foreground">
+                  Message:
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {order.message}
+                </div>
+              </div>
+            )}
+
             {/* Payment Info */}
             <div className="flex items-center gap-2 text-sm pt-2 border-t">
               <CreditCard className="h-4 w-4 text-muted-foreground flex-shrink-0" />

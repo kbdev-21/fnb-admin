@@ -7,10 +7,12 @@ import { useAuth } from "@/contexts/auth-context";
 import { Link, useNavigate } from "react-router-dom";
 import { login } from "@/api/fnb-api";
 import { Mail, Lock, LogIn, AlertCircle } from "lucide-react";
+import { useOrder } from "@/contexts/order-context";
 
 export default function LoginPage() {
   const auth = useAuth();
   const navigate = useNavigate();
+  const { setStoreCode } = useOrder();
 
   useEffect(() => {
     if (auth.isReady && auth.isLoggedIn()) {
@@ -26,6 +28,9 @@ export default function LoginPage() {
     mutationFn: () => login(phoneNumOrEmail, password),
     onSuccess: (data) => {
       auth.setTokenAndMyInfo(data.token, data.user);
+      if(data.user.staffOfStoreCode) {
+        setStoreCode(data.user.staffOfStoreCode);
+      }
       navigate("/");
     },
     onError: () => {

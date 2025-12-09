@@ -23,6 +23,7 @@ import SignupPage from "./pages/SignupPage";
 import ProfilePage from "./pages/ProfilePage";
 import FindStorePage from "./pages/FindStorePage";
 import ContactUsPage from "./pages/ContactUsPage";
+import LoggingPage from "./pages/admin/LoggingPage";
 
 const queryClient = new QueryClient();
 
@@ -53,6 +54,10 @@ function App() {
                       replace
                     />
                   }
+                />
+                <Route
+                  path="/admin/logging"
+                  element={<LoggingPage />}
                 />
                 <Route
                   path="/admin/menu"

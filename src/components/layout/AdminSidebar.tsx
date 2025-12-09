@@ -11,6 +11,7 @@ import {
   Book,
   ChartNoAxesColumnIncreasing,
   CirclePercent,
+  Clipboard,
   Clock4,
   Gauge,
   Globe,
@@ -39,13 +40,10 @@ export default function AdminSidebar() {
   const auth = useAuth();
 
   const group1Items = [
-    {
-      title: "Analytics",
-      url: "/admin/analytics",
-      icon: ChartNoAxesColumnIncreasing,
-    },
+    { title: "Analytics", url: "/admin/analytics", icon: ChartNoAxesColumnIncreasing,},
     { title: "Orders", url: "/admin/orders", icon: TableProperties },
     { title: "Users", url: "/admin/users", icon: Users },
+    { title: "Logging", url: "/admin/logging", icon: Clipboard },
   ];
 
   const group2Items = [
