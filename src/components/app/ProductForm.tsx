@@ -142,16 +142,28 @@ export default function ProductForm({ initData, onFormDataChange }: ProductFormP
         </div>
         <div className={"flex flex-col gap-2"}>
           <div className={"text-sm"}>Images</div>
-          <div className={"flex gap-4"}>
-            {imgUrls.map((imgUrl) => (
-              <img
-                key={imgUrl}
-                src={imgUrl}
-                alt={imgUrl}
-                className={
-                  "h-20 w-20 rounded-md border border-muted-foreground"
-                }
-              />
+          <div className={"flex gap-4 flex-wrap"}>
+            {imgUrls.map((imgUrl, index) => (
+              <div key={imgUrl} className={"relative group"}>
+                <img
+                  src={imgUrl}
+                  alt={imgUrl}
+                  className={
+                    "h-20 w-20 rounded-md border border-muted-foreground object-cover"
+                  }
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    setImgUrls((prev) => prev.filter((_, i) => i !== index))
+                  }
+                  className={
+                    "absolute -top-2 -right-2 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  }
+                >
+                  ×
+                </button>
+              </div>
             ))}
             <OpenAddImageDialogButton
               onUploaded={(url) => {
